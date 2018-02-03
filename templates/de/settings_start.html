@@ -1,0 +1,55 @@
+									<form method="post" data-ajax="false" name="main_form" id="main_form" action="./index.cgi" onsubmit="custom_submit()">
+										<input type="hidden" name="saveformdata" value="1">
+											<div class="form-group">
+												<table class="formtable" border="0" width="100%" cellpadding="10">
+													<tr>
+														<td colspan=3 width="75%" valign="middle">
+														<h2>Wifi Scanner Einstellungen</h2>
+														</td>
+													</tr>
+													<tr>
+														<td width="25%">
+															<label id="labelauto">Scanner aktivieren:</label>
+														</td>
+														<td width="50%">
+															<table border=0 width="100%">
+															<tr>
+															<td width="20%">
+															<fieldset>
+																<select onclick="disable()" id="scanner_active" name="scanner_active" data-role="flipswitch">
+																	<option <!--$scanner_active_off--> value="0">Aus</option>
+																	<option <!--$scanner_active_on--> value="1">An</option>
+																</select>
+															</fieldset>
+															</td>
+															<td>
+															<select id="cron" name="cron" data-mini="true" data-native-menu="false">
+																<option value="1" <!--$selectedcron1-->>Minütlich</option>
+																<option value="3" <!--$selectedcron2-->>3 Minütlich</option>
+																<option value="5" <!--$selectedcron3-->>5 Minütlich</option>
+																<option value="10" <!--$selectedcron4-->>10 Minütlich</option>
+																<option value="15" <!--$selectedcron5-->>15 Minütlich</option>
+																<option value="30" <!--$selectedcron6-->>30 Minütlich</option>
+																<option value="60" <!--$selectedcron7-->>Stündlich</option>
+															</select>
+															</td>
+															</tr>
+															</table>
+														</td>
+													</tr>
+													<tr>
+														<td colspan=4>
+														&nbsp;
+														</td>
+													</tr>
+													<tr>
+														<td colspan=3 width="75%" valign="middle">
+														<h2>Benutzer</h2>
+														</td>
+														<td align="right">
+														&nbsp;
+														</td>
+													</tr>
+													<tr>
+														<input id="user_count" name="user_count" type="hidden" class="textfield">
+														<table id="users">

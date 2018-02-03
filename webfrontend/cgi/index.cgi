@@ -192,6 +192,7 @@ sub form {
 	$udpport          = $pcfg->param("BASE.PORT");
   $fritzbox         = $pcfg->param("BASE.FRITZBOX");
   $fritzbox_port    = $pcfg->param("BASE.FRITZBOX_PORT");
+  $users            = $pcfg->param("BASE.USERS");
 
   # GETWUDATA
   if ($scanner_active eq "1") {
@@ -224,13 +225,32 @@ sub form {
 
 	# Print Template
 	&lbheader;
-	open(F,"$installfolder/templates/plugins/$psubfolder/$lang/settings.html") || die "Missing template plugins/$psubfolder/$lang/settings.html";
+	open(F,"$installfolder/templates/plugins/$psubfolder/$lang/settings_start.html") || die "Missing template plugins/$psubfolder/$lang/settings_end.html";
 	  while (<F>)
 	  {
 	    $_ =~ s/<!--\$(.*?)-->/${$1}/g;
 	    print $_;
 	  }
 	close(F);
+  for ($i=1;$i<=$users;$i++) {
+    $username = $pcfg->param("USER$i.NAME");
+    $macs = $pcfg->param("USER$i.MACS");
+    $index = $i;
+    open(F,"$installfolder/templates/plugins/$psubfolder/$lang/user_row.html") || die "Missing template plugins/$psubfolder/$lang/user_row.html";
+  	  while (<F>)
+  	  {
+  	    $_ =~ s/<!--\$(.*?)-->/${$1}/g;
+  	    print $_;
+  	  }
+  	close(F);
+  }
+  open(F,"$installfolder/templates/plugins/$psubfolder/$lang/settings_end.html") || die "Missing template plugins/$psubfolder/$lang/settings_end.html";
+    while (<F>)
+    {
+      $_ =~ s/<!--\$(.*?)-->/${$1}/g;
+      print $_;
+    }
+  close(F);
 	&footer;
 	exit;
 
@@ -253,6 +273,7 @@ sub save
 	$udpport        = param('udpport');
   $fritzbox       = param('fritzbox');
   $fritzbox_port  = param('fritzbox_port');
+  $user_count     = param('user_count');
 
 	# Filter
 	$cron          = quotemeta($cron);
@@ -267,6 +288,14 @@ sub save
 	$pcfg->param("BASE.PORT", "$udpport");
   $pcfg->param("BASE.FRITZBOX", "$fritzbox");
   $pcfg->param("BASE.FRITZBOX_PORT", "$fritzbox_port");
+  $pcfg->param("BASE.USERS", "$user_count");
+
+  for ($i=1;$i<=$user_count;$i++) {
+    $username = quotemeta(param("username$i"));
+    $macs = param("macs$i");
+    $pcfg->param("USER$i.NAME", "$username");
+    $pcfg->param("USER$i.MACS", "$macs");
+  }
 
 	$pcfg->save();
 
