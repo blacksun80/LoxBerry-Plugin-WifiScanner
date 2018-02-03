@@ -1,0 +1,109 @@
+									<form method="post" data-ajax="false" name="main_form" id="main_form" action="./index.cgi">
+										<input type="hidden" name="saveformdata" value="1">
+											<div class="form-group">
+												<table class="formtable" border="0" width="100%" cellpadding="10">
+													<tr>
+														<td colspan=3 width="75%" valign="middle">
+														<h2>Wifi Scanner&reg; Einstellungen</h2>
+														</td>
+													</tr>
+													<tr>
+														<td width="25%">
+															<label id="labelauto">Scanner aktivieren:</label>
+														</td>
+														<td width="50%">
+															<table border=0 width="100%">
+															<tr>
+															<td width="20%">
+															<fieldset>
+																<select onclick="disable()" id="scanner_active" name="scanner_active" data-role="flipswitch">
+																	<option <!--$scanner_active_off--> value="0">Aus</option>
+																	<option <!--$scanner_active_on--> value="1">An</option>
+																</select>
+															</fieldset>
+															</td>
+															<td>
+															<select id="cron" name="cron" data-mini="true" data-native-menu="false">
+																<option value="1" <!--$selectedcron1-->>Minütlich</option>
+																<option value="3" <!--$selectedcron2-->>3 Minütlich</option>
+																<option value="5" <!--$selectedcron3-->>5 Minütlich</option>
+																<option value="10" <!--$selectedcron4-->>10 Minütlich</option>
+																<option value="15" <!--$selectedcron5-->>15 Minütlich</option>
+																<option value="30" <!--$selectedcron6-->>30 Minütlich</option>
+																<option value="60" <!--$selectedcron7-->>Stündlich</option>
+															</select>
+															</td>
+															</tr>
+															</table>
+														</td>
+													</tr>
+													<tr>
+														<td colspan=4>
+														&nbsp;
+														</td>
+													</tr>
+													<tr>
+														<td colspan=3 width="75%" valign="middle">
+														<h2>Miniserveranbindung</h2>
+														</td>
+														<td align="right">
+														&nbsp;
+														</td>
+													</tr>
+													<tr>
+														<td width="25%">
+															<label id="labelsendudp">Per UDP senden:</label>
+														</td>
+														<td width="75%">
+															<table border=0 width="100%">
+															<tr>
+															<td>
+															<table border=0 width="100%">
+															<tr>
+															<td>
+															<label id="labeludpport">UDP Port:</label>
+															</td>
+															<td>
+															<input id="udpport" name="udpport" type="text" data-validation="number" class="textfield" value="<!--$udpport-->"
+																data-validation-allowing="range[1;65000]"
+																data-validation-error-msg="* Bitte geben Sie einen gültigen Port zwischen 1 und 65000 an.">
+															</td>
+															</tr>
+															</table>
+															</td>
+															</tr>
+															</table>
+														</td>
+													</tr>
+												</tr>
+											</table>
+										</div>
+									<p>
+										&nbsp;
+									</p>
+									<p>
+										<center>
+											<a id="btncancel" data-role="button" data-inline="true" data-mini="true" data-icon="delete" href="/admin/index.cgi">Abbrechen</a>
+												<button type="submit" form="main_form" id="btnsubmit" data-role="button" data-inline="true" data-mini="true" data-icon="check">Speichern</button>
+										</center>
+									</form>
+									</p>
+                  <script>
+                    var $messages = $('#form-error-message');
+                    $.validate({
+                      modules : 'security',
+                      scrollToTopOnError : true,
+                      errorMessagePosition : $messages,
+                    });
+
+                    // Disable some options on Load depending on selected value
+                    disable();
+
+                    // Disable some options on click depending on selected value
+                    function disable() {
+                      // Station ID
+                      if ( document.main_form.scanner_active.scanner_active_on == true ) {
+                        $('#cron').removeClass('ui-disabled');
+                      }
+                    }
+                  </script>
