@@ -44,6 +44,32 @@
 													</tr>
 													<tr>
 														<td colspan=3 width="75%" valign="middle">
+														<h2>Fritzboxanbindung</h2>
+														</td>
+														<td align="right">
+														&nbsp;
+														</td>
+													</tr>
+													<tr>
+														<td width="25%">
+															<label id="labelapikey">Fritz Box IP:</label>
+														</td>
+														<td width="75%">
+															<input id="fritzbox" name="fritzbox" type="text" class="textfield" value="<!--$fritzbox-->">
+														</td>
+													</tr>
+													<tr>
+														<td width="25%">
+															<label id="labelapikey">Fritz Box Port:</label>
+														</td>
+														<td width="75%">
+															<input id="fritzbox_port" name="fritzbox_port" type="text" data-validation="number" class="textfield" value="<!--$fritzbox_port-->"
+															  data-validation-allowing="range[1;65000]"
+															  data-validation-error-msg="* Bitte geben Sie einen gültigen Port zwischen 1 und 65000 an.">
+														</td>
+													</tr>
+													<tr>
+														<td colspan=3 width="75%" valign="middle">
 														<h2>Miniserveranbindung</h2>
 														</td>
 														<td align="right">
@@ -55,24 +81,9 @@
 															<label id="labelsendudp">Per UDP senden:</label>
 														</td>
 														<td width="75%">
-															<table border=0 width="100%">
-															<tr>
-															<td>
-															<table border=0 width="100%">
-															<tr>
-															<td>
-															<label id="labeludpport">UDP Port:</label>
-															</td>
-															<td>
 															<input id="udpport" name="udpport" type="text" data-validation="number" class="textfield" value="<!--$udpport-->"
 																data-validation-allowing="range[1;65000]"
 																data-validation-error-msg="* Bitte geben Sie einen gültigen Port zwischen 1 und 65000 an.">
-															</td>
-															</tr>
-															</table>
-															</td>
-															</tr>
-															</table>
 														</td>
 													</tr>
 												</tr>

@@ -190,6 +190,8 @@ sub form {
 	$scanner_active   = $pcfg->param("BASE.ENABLED");
 	$cron             = $pcfg->param("BASE.CRON");
 	$udpport          = $pcfg->param("BASE.PORT");
+  $fritzbox         = $pcfg->param("BASE.FRITZBOX");
+  $fritzbox_port    = $pcfg->param("BASE.FRITZBOX_PORT");
 
   # GETWUDATA
   if ($scanner_active eq "1") {
@@ -249,16 +251,22 @@ sub save
   $scanner_active = param('scanner_active');
 	$cron           = param('cron');
 	$udpport        = param('udpport');
+  $fritzbox       = param('fritzbox');
+  $fritzbox_port  = param('fritzbox_port');
 
 	# Filter
-	$cron       = quotemeta($cron);
-	$udpport    = quotemeta($udpport);
+	$cron          = quotemeta($cron);
+	$udpport       = quotemeta($udpport);
+  #$fritzbox      = quotemeta($fritzbox);
+  $fritzbox_port = quotemeta($fritzbox_port);
 
 	# OK - now installing...
 
 	# Write configuration file(s)
   $pcfg->param("BASE.ENABLED", "$scanner_active");
 	$pcfg->param("BASE.PORT", "$udpport");
+  $pcfg->param("BASE.FRITZBOX", "$fritzbox");
+  $pcfg->param("BASE.FRITZBOX_PORT", "$fritzbox_port");
 
 	$pcfg->save();
 
