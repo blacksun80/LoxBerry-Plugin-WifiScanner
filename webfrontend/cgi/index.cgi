@@ -61,15 +61,7 @@ our $pname;
 our $verbose;
 our $languagefileplugin;
 our $phraseplugin;
-our $stationtyp;
-our $selectedstationtyp1;
-our $selectedstationtyp2;
-our $selectedstationtyp3;
-our $lat;
-our $long;
-our $stationid;
-our $wuapikey;
-our $getwudata;
+our $scanner_active;
 our $cron;
 our $wulang;
 our $metric;
@@ -80,9 +72,6 @@ our $sendhfc;
 our $var;
 our $theme;
 our $iconset;
-our $dfc;
-our $hfc;
-our $wuurl;
 our $ua;
 our $res;
 our $json;
@@ -198,8 +187,9 @@ exit;
 sub form {
 
 	$pcfg             = new Config::Simple("$installfolder/config/plugins/$psubfolder/wifi_scanner.cfg");
-	$enabled          = $pcfg->param("BASE.ENABLED");
+	$scanner_active   = $pcfg->param("BASE.ENABLED");
 	$cron             = $pcfg->param("BASE.CRON");
+	$udpport          = $pcfg->param("BASE.PORT");
 
   # GETWUDATA
   if ($scanner_active eq "1") {
@@ -253,13 +243,12 @@ sub save
 
 	# Read Config
 	$pcfg    = new Config::Simple("$installfolder/config/plugins/$psubfolder/wifi_scanner.cfg");
-	$wuurl   = $pcfg->param("SERVER.WUURL");
 	$pname   = $pcfg->param("PLUGIN.SCRIPTNAME");
 
 	# Everything from Forms
-  $enabled    = param('enabled');
-	$cron       = param('cron');
-	$udpport    = param('udpport');
+  $scanner_active = param('scanner_active');
+	$cron           = param('cron');
+	$udpport        = param('udpport');
 
 	# Filter
 	$cron       = quotemeta($cron);
@@ -268,13 +257,13 @@ sub save
 	# OK - now installing...
 
 	# Write configuration file(s)
-  $pcfg->param("BASE.ENABLED", "$enabled");
+  $pcfg->param("BASE.ENABLED", "$scanner_active");
 	$pcfg->param("BASE.PORT", "$udpport");
 
 	$pcfg->save();
 
 	# Create Cronjob
-	if ($enabled eq "1")
+	if ($scanner_active eq "1")
 	{
 	  if ($cron eq "1")
 	  {
