@@ -49,15 +49,13 @@ $psubfolder =~ s/(.*)\/(.*)\/bin\/(.*)$/$2/g;
 
 my $home = File::HomeDir->my_home;
 
-# my $cfg             = new Config::Simple("$home/config/system/general.cfg");
-my $cfg             = new Config::Simple("/opt/loxberry/config/system/general.cfg");
+my $cfg             = new Config::Simple("$home/config/system/general.cfg");
 my $lang            = $cfg->param("BASE.LANG");
 my $installfolder   = $cfg->param("BASE.INSTALLFOLDER");
 my $miniservers     = $cfg->param("BASE.MINISERVERS");
 my $clouddns        = $cfg->param("BASE.CLOUDDNS");
 
-# my $pcfg             = new Config::Simple("$installfolder/config/plugins/$psubfolder/wifi_scanner.cfg");
-my $pcfg             = new Config::Simple("/opt/loxberry/wifi_scanner.cfg");
+my $pcfg             = new Config::Simple("$installfolder/config/plugins/$psubfolder/wifi_scanner.cfg");
 my $udpport           = $pcfg->param("BASE.PORT");
 my $ip               = $pcfg->param("BASE.FRITZBOX");
 my $port             = $pcfg->param("BASE.FRITZBOX_PORT");
