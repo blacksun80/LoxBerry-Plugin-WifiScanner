@@ -1,6 +1,6 @@
 														</table>
 														<center>
-															<button width="30%" type=button onclick="addUser()" data-role="button" data-inline="true" data-mini="true" data-icon="check">Add a User</button>
+															<button width="30%" type=button onclick="addUser()" data-role="button" data-inline="true" data-mini="true" data-icon="check">Neuer Benutzer</button>
 														</center>
 													</tr>
 													<tr>
@@ -48,6 +48,17 @@
 														</td>
 													</tr>
 												</tr>
+												<tr>
+													<td colspan=4>
+													&nbsp;
+													</td>
+												</tr>
+												<tr>
+													<td></td>
+													<td colspan=3>
+													  <div id="form-error-message" class="form-error-message"></div>
+												  </td>
+											  </tr>
 											</table>
 										</div>
 									<p>
@@ -117,16 +128,16 @@
 												cell4.innerHTML = "&nbsp;";
 												var cell5 = row.insertCell(4);
 												cell5.setAttribute("width", "10%")
-												cell5.innerHTML = "<label id=\"labelauto\">MACS:</label>";
+												cell5.innerHTML = "<label id=\"labelauto\">MAC:</label>";
 												var cell6 = row.insertCell(5);
 												cell6.setAttribute("width", "30%")
-												cell6.innerHTML = "<input id=\"macs" + rowCount + "\" name=\"macs" + rowCount + "\" type=\"text\" class=\"textfield\" value=\"\">";
+												cell6.innerHTML = "<input id=\"macs" + rowCount + "\" name=\"macs" + rowCount + "\" type=\"text\" class=\"textfield\" value=\"\" pattern=\"([A-fa-f0-9]{2}:){5}([A-fa-f0-9]{2})(;([A-fa-f0-9]{2}:){5}([A-fa-f0-9]{2}))*\" title=\"MAC Adresse (mehrere möglich, getrennt mit ;)\">";
 												var cell7 = row.insertCell(6);
 												cell7.setAttribute("width", "10%")
 												cell7.innerHTML = "&nbsp;";
 												var cell8 = row.insertCell(7);
 												cell8.setAttribute("width", "20%")
-												cell8.innerHTML = "<button type=button onclick=\"deleteUser(parentElement.parentElement.rowIndex)\">Delete</button>";
+												cell8.innerHTML = "<button type=button onclick=\"deleteUser(parentElement.parentElement.rowIndex)\">Löschen</button>";
 
 												// Reinit Validator
 												var $messages = $('#form-error-message');
