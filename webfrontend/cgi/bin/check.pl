@@ -235,5 +235,21 @@ for ($i=1;$i<=$miniservers;$i++) {
 sub log {
   # Print
   if ($verbose) {print $logmessage;}
+
+  # Today's date for logfile
+  (my $sec,my $min,my $hour,my $mday,my $mon,my $year,my $wday,my $yday,my $isdst) = localtime();
+  $year = $year+1900;
+  $mon = $mon+1;
+  $mon = sprintf("%02d", $mon);
+  $mday = sprintf("%02d", $mday);
+  $hour = sprintf("%02d", $hour);
+  $min = sprintf("%02d", $min);
+  $sec = sprintf("%02d", $sec);
+
+  # Logfile
+  open(F,">>$home/log/plugins/$psubfolder/wifi_scanner.log");
+
+  print F "$year-$mon-$mday $hour:$min:$sec : $logmessage";
+  close (F);
   return();
 }
