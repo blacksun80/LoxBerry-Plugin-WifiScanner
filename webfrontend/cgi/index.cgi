@@ -289,6 +289,7 @@ sub save
   $pcfg->param("BASE.FRITZBOX", "$fritzbox");
   $pcfg->param("BASE.FRITZBOX_PORT", "$fritzbox_port");
   $pcfg->param("BASE.USERS", "$user_count");
+  $pcfg->param("BASE.CRON", "$cron");
 
   for ($i=1;$i<=$user_count;$i++) {
     $username = quotemeta(param("username$i"));
