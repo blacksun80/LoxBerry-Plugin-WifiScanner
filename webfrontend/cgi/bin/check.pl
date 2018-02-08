@@ -116,7 +116,7 @@ foreach(@{$discover->{device}->{deviceList}->{device}->[0]->{serviceList}->{serv
 
 if ($control_url eq "not set" or $service_type eq "not set")
  {
-    die "control URL/service type not found. Cannot request host info!";
+    die "control URL/service type not found. Cannot request host info!";j
  }
 
 # Prepare request for query LAN host
@@ -201,7 +201,7 @@ for ($i=1;$i<=$miniservers;$i++) {
   } else {
     if ( $cfg->param("MINISERVER$i.IPADDRESS") ) {
       ${"miniserverip" . "$i"} = $cfg->param("MINISERVER$i.IPADDRESS");
-      $logmessage = "<INFO> Send Data to " . ${"miniservername" . "$i"}  . " at " . ${"miniserverip" . "$i"} . ".\n";
+      $logmessage = "<INFO> Using " . ${"miniservername" . "$i"}  . " at " . ${"miniserverip" . "$i"} . ".\n";
       &log;
     } else {
       ${"miniserverip" . "$i"} = "127.0.0.1";
@@ -219,11 +219,10 @@ for ($i=1;$i<=$miniservers;$i++) {
     Type        => SOCK_DGRAM
   ) or die "<ERROR> Could not create socket: $!\n";
   for ($j=1;$j<=$users;$j++) {
+    &log;
     $sock->send(${"username" . "$j"}.":".${"online" . "$j"}) or die "Send error: $!\n";
-    if ($verbose) {
-      $logmessage = "<INFO> Sending Data '".${"username" . "$j"}.":".${"online" . "$j"}."' to " . ${"miniservername" . "$i"} . ". IP:" . ${"miniserverip" . "$i"} . " Port:$udpport\n";
-      &log;
-    }
+    $logmessage = "<INFO> Sending Data '".${"username" . "$j"}.":".${"online" . "$j"}."' to " . ${"miniservername" . "$i"} . ". IP:" . ${"miniserverip" . "$i"} . " Port:$udpport\n";
+    &log;
   }
   $sock->close();
 }
