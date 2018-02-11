@@ -116,7 +116,7 @@ foreach(@{$discover->{device}->{deviceList}->{device}->[0]->{serviceList}->{serv
 
 if ($control_url eq "not set" or $service_type eq "not set")
  {
-    die "control URL/service type not found. Cannot request host info!";j
+    die "control URL/service type not found. Cannot request host info!";
  }
 
 # Prepare request for query LAN host
