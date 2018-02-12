@@ -14,25 +14,25 @@
 														<td width="50%">
 															<table border=0 width="100%">
 															<tr>
-															<td width="20%">
-															<fieldset>
-																<select onclick="disable()" id="scanner_active" name="scanner_active" data-role="flipswitch">
-																	<option <!--$scanner_active_off--> value="0"><!--$T::SETTINGS_OFF--></option>
-																	<option <!--$scanner_active_on--> value="1"><!--$T::SETTINGS_ON--></option>
+																<td width="20%">
+																<fieldset>
+																	<select onclick="disable()" id="scanner_active" name="scanner_active" data-role="flipswitch">
+																		<option <!--$scanner_active_off--> value="0"><!--$T::SETTINGS_OFF--></option>
+																		<option <!--$scanner_active_on--> value="1"><!--$T::SETTINGS_ON--></option>
+																	</select>
+																</fieldset>
+																</td>
+																<td>
+																<select id="cron" name="cron" data-mini="true" data-native-menu="false">
+																	<option value="1" <!--$selectedcron1-->><!--$T::SETTINGS_CRON_1--></option>
+																	<option value="3" <!--$selectedcron2-->><!--$T::SETTINGS_CRON_2--></option>
+																	<option value="5" <!--$selectedcron3-->><!--$T::SETTINGS_CRON_3--></option>
+																	<option value="10" <!--$selectedcron4-->><!--$T::SETTINGS_CRON_4--></option>
+																	<option value="15" <!--$selectedcron5-->><!--$T::SETTINGS_CRON_5--></option>
+																	<option value="30" <!--$selectedcron6-->><!--$T::SETTINGS_CRON_6--></option>
+																	<option value="60" <!--$selectedcron7-->><!--$T::SETTINGS_CRON_7--></option>
 																</select>
-															</fieldset>
-															</td>
-															<td>
-															<select id="cron" name="cron" data-mini="true" data-native-menu="false">
-																<option value="1" <!--$selectedcron1-->><!--$T::SETTINGS_CRON_1--></option>
-																<option value="3" <!--$selectedcron2-->><!--$T::SETTINGS_CRON_2--></option>
-																<option value="5" <!--$selectedcron3-->><!--$T::SETTINGS_CRON_3--></option>
-																<option value="10" <!--$selectedcron4-->><!--$T::SETTINGS_CRON_4--></option>
-																<option value="15" <!--$selectedcron5-->><!--$T::SETTINGS_CRON_5--></option>
-																<option value="30" <!--$selectedcron6-->><!--$T::SETTINGS_CRON_6--></option>
-																<option value="60" <!--$selectedcron7-->><!--$T::SETTINGS_CRON_7--></option>
-															</select>
-															</td>
+																</td>
 															</tr>
 															</table>
 														</td>
@@ -51,5 +51,6 @@
 														</td>
 													</tr>
 													<tr>
-														<input id="user_count" name="user_count" type="hidden" class="textfield">
-														<table id="users">
+														<td colspan=4 valign="middle">
+															<input id="user_count" name="user_count" type="hidden" class="textfield">
+															<table id="users">

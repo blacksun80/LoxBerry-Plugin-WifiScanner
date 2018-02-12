@@ -1,7 +1,8 @@
-														</table>
-														<center>
-															<button width="30%" type=button onclick="addUser()" data-role="button" data-inline="true" data-mini="true" data-icon="check">Neuer Benutzer</button>
-														</center>
+															</table>
+															<center>
+																<button width="30%" type=button onclick="addUser()" data-role="button" data-inline="true" data-mini="true" data-icon="check">Neuer Benutzer</button>
+															</center>
+														</td>
 													</tr>
 													<tr>
 														<td colspan=3 width="75%" valign="middle">
@@ -15,15 +16,17 @@
 														<td width="25%">
 															<label id="labelapikey"><!--$T::SETTINGS_FRITZ_IP--></label>
 														</td>
-														<td width="75%">
+														<td colspan="2" width="50%">
 															<input id="fritzbox" name="fritzbox" type="text" class="textfield" value="<!--$fritzbox-->">
+														</td>
+														<td width="25%">
 														</td>
 													</tr>
 													<tr>
 														<td width="25%">
 															<label id="labelapikey"><!--$T::SETTINGS_FRITZ_PORT--></label>
 														</td>
-														<td width="75%">
+														<td width="50%">
 															<input id="fritzbox_port" name="fritzbox_port" type="text" data-validation="number" class="textfield" value="<!--$fritzbox_port-->"
 															  data-validation-allowing="range[1;65000]"
 															  data-validation-error-msg="<!--$T::SETTINGS_PORT_RANGE_ERROR-->">
@@ -41,7 +44,7 @@
 														<td width="25%">
 															<label id="labelsendudp"><!--$T::SETTINGS_SEND_UDP--></label>
 														</td>
-														<td width="75%">
+														<td width="50%">
 															<input id="udpport" name="udpport" type="text" data-validation="number" class="textfield" value="<!--$udpport-->"
 																data-validation-allowing="range[1;65000]"
 																data-validation-error-msg="<!--$T::SETTINGS_PORT_RANGE_ERROR-->">
