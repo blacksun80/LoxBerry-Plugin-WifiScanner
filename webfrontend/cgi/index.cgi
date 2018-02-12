@@ -400,6 +400,24 @@ sub save
 	}
 	close(F);
 	&footer;
+
+  if ($scanner_active eq "1")
+  {
+    # Start one scan right away
+    # Without the following workaround
+    # the script cannot be executed as
+    # background process via CGI
+    my $pid = fork();
+    die "Fork failed: $!" if !defined $pid;
+    if ($pid == 0)
+    {
+      # do this in the child
+      open STDIN, "</dev/null";
+      open STDOUT, ">/dev/null";
+      open STDERR, ">/dev/null";
+      system("$installfolder/webfrontend/cgi/plugins/$psubfolder/bin/check.pl &");
+    }
+  }
 	exit;
 
 }
