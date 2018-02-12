@@ -4,12 +4,12 @@
 												<table class="formtable" border="0" width="100%" cellpadding="10">
 													<tr>
 														<td colspan=3 width="75%" valign="middle">
-														<h2>Wifi Scanner Einstellungen</h2>
+														<h2><!--$T::SETTINGS_TITLE--></h2>
 														</td>
 													</tr>
 													<tr>
 														<td width="25%">
-															<label id="labelauto">Scanner aktivieren:</label>
+															<label id="labelauto"><!--$T::SETTINGS_ENABLE--></label>
 														</td>
 														<td width="50%">
 															<table border=0 width="100%">
@@ -17,20 +17,20 @@
 															<td width="20%">
 															<fieldset>
 																<select onclick="disable()" id="scanner_active" name="scanner_active" data-role="flipswitch">
-																	<option <!--$scanner_active_off--> value="0">Aus</option>
-																	<option <!--$scanner_active_on--> value="1">An</option>
+																	<option <!--$scanner_active_off--> value="0"><!--$T::SETTINGS_OFF--></option>
+																	<option <!--$scanner_active_on--> value="1"><!--$T::SETTINGS_ON--></option>
 																</select>
 															</fieldset>
 															</td>
 															<td>
 															<select id="cron" name="cron" data-mini="true" data-native-menu="false">
-																<option value="1" <!--$selectedcron1-->>Minütlich</option>
-																<option value="3" <!--$selectedcron2-->>3 Minütlich</option>
-																<option value="5" <!--$selectedcron3-->>5 Minütlich</option>
-																<option value="10" <!--$selectedcron4-->>10 Minütlich</option>
-																<option value="15" <!--$selectedcron5-->>15 Minütlich</option>
-																<option value="30" <!--$selectedcron6-->>30 Minütlich</option>
-																<option value="60" <!--$selectedcron7-->>Stündlich</option>
+																<option value="1" <!--$selectedcron1-->><!--$T::SETTINGS_CRON_1--></option>
+																<option value="3" <!--$selectedcron2-->><!--$T::SETTINGS_CRON_2--></option>
+																<option value="5" <!--$selectedcron3-->><!--$T::SETTINGS_CRON_3--></option>
+																<option value="10" <!--$selectedcron4-->><!--$T::SETTINGS_CRON_4--></option>
+																<option value="15" <!--$selectedcron5-->><!--$T::SETTINGS_CRON_5--></option>
+																<option value="30" <!--$selectedcron6-->><!--$T::SETTINGS_CRON_6--></option>
+																<option value="60" <!--$selectedcron7-->><!--$T::SETTINGS_CRON_7--></option>
 															</select>
 															</td>
 															</tr>
@@ -44,7 +44,7 @@
 													</tr>
 													<tr>
 														<td colspan=3 width="75%" valign="middle">
-														<h2>Benutzer</h2>
+														<h2><!--$T::SETTINGS_USER--></h2>
 														</td>
 														<td align="right">
 														&nbsp;

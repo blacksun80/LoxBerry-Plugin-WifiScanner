@@ -157,8 +157,9 @@ if (!-e "$installfolder/templates/plugins/$psubfolder/$lang/language.dat") {
 }
 
 # Read translations / phrases
-$planguagefile	= "$installfolder/templates/plugins/$psubfolder/$lang/language.dat";
+$planguagefile	= "$installfolder/templates/plugins/$psubfolder/de/language.dat";
 $pphrase = new Config::Simple($planguagefile);
+$pphrase->import_names('T');
 
 ##########################################################################
 # Main program
@@ -221,11 +222,11 @@ sub form {
 
 	print "Content-Type: text/html\n\n";
 
-	$template_title = $pphrase->param("TXT0000") . ": " . $pphrase->param("TXT0001");
+	$template_title = $pphrase->param("TXT0001");
 
 	# Print Template
 	&lbheader;
-	open(F,"$installfolder/templates/plugins/$psubfolder/$lang/settings_start.html") || die "Missing template plugins/$psubfolder/$lang/settings_end.html";
+	open(F,"$installfolder/templates/plugins/$psubfolder/multi/settings_start.html") || die "Missing template plugins/$psubfolder/$lang/settings_end.html";
 	  while (<F>)
 	  {
 	    $_ =~ s/<!--\$(.*?)-->/${$1}/g;
@@ -236,7 +237,7 @@ sub form {
     $username = $pcfg->param("USER$i.NAME");
     $macs = $pcfg->param("USER$i.MACS");
     $index = $i;
-    open(F,"$installfolder/templates/plugins/$psubfolder/$lang/user_row.html") || die "Missing template plugins/$psubfolder/$lang/user_row.html";
+    open(F,"$installfolder/templates/plugins/$psubfolder/multi/user_row.html") || die "Missing template plugins/$psubfolder/$lang/user_row.html";
   	  while (<F>)
   	  {
   	    $_ =~ s/<!--\$(.*?)-->/${$1}/g;
@@ -244,7 +245,7 @@ sub form {
   	  }
   	close(F);
   }
-  open(F,"$installfolder/templates/plugins/$psubfolder/$lang/settings_end.html") || die "Missing template plugins/$psubfolder/$lang/settings_end.html";
+  open(F,"$installfolder/templates/plugins/$psubfolder/multi/settings_end.html") || die "Missing template plugins/$psubfolder/$lang/settings_end.html";
     while (<F>)
     {
       $_ =~ s/<!--\$(.*?)-->/${$1}/g;
@@ -385,8 +386,8 @@ sub save
 	  unlink ("$installfolder/system/cron/cron.hourly/$pname");
 	}
 
-	$template_title = $pphrase->param("TXT0000") . " - " . $pphrase->param("TXT0001");
-	$message = $pphrase->param("TXT0006");
+	$template_title = $pphrase->param("TXT0001");
+	$message = $pphrase->param("TXT0002");
 	$nexturl = "./index.cgi?do=form";
 
 	print "Content-Type: text/html\n\n";
@@ -410,7 +411,7 @@ sub save
 
 sub error
 {
-	$template_title = $pphrase->param("TXT0000") . " - " . $pphrase->param("TXT0001");
+	$template_title = $pphrase->param("TXT0001");
 	print "Content-Type: text/html\n\n";
 	&lbheader;
 	open(F,"$installfolder/templates/system/$lang/error.html") || die "Missing template system/$lang/error.html";

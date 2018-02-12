@@ -1,5 +1,34 @@
 ;
 ; Language phrases DE
 ;
-TXT0000=LoxBerry
+
 TXT0001=Wifi Scanner
+TXT0002=Alle Einstellungen erfolgreich gespeichert und aktiviert.
+
+[SETTINGS]
+TITLE=Wifi Scanner Einstellungen
+ENABLE=Scanner aktivieren:
+USER=Benutzer
+CRON_1=Min&uuml;tlich
+CRON_2=3 Min&uuml;tlich
+CRON_3=5 Min&uuml;tlich
+CRON_4=10 Min&uuml;tlich
+CRON_5=15 Min&uuml;tlich
+CRON_6=30 Min&uuml;tlich
+CRON_7=St&uuml;ndlich
+ON=An
+OFF=Aus
+FRITZ=Fritzboxanbindung
+FRITZ_IP=Fritz Box IP:
+FRITZ_PORT=Fritz Box Port:
+MINISERVER=Miniserveranbindung
+SEND_UDP=Per UDP senden:
+OPEN_LOG=Logdatei &ouml;ffnen
+CANCEL=Abbrechen
+SAVE=Speichern
+NAME=Name:
+MAC=MAC:
+DELETE=L&ouml;schen
+PORT_RANGE_ERROR=* Bitte geben Sie einen g&uuml;ltigen Port zwischen 1 und 65000 an.
+NAME_ERROR=* Bitte nur alphanumerische Zeichen verwenden.
+MAC_ERROR=* Bitte eine g&uuml;ltige MAC Adresse eingeben &#40;mehrere m&ouml;glich&#44; getrennt mit &#59;&#41;.

@@ -3,30 +3,29 @@
         &nbsp;
     </td>
     <td width="10%">
-        <label id="labelauto">Name:</label>
+        <label id="labelauto"><!--$T::SETTINGS_NAME--></label>
     </td>
     <td width="20%">
         <input id="username<!--$index-->" name="username<!--$index-->" type="text" class="textfield" value="<!--$username-->"
         data-validation="alphanumeric"
-        data-validation-error-msg="* Bitte nur alphanumerische Zeichen verwenden"
-        title="* Bitte nur alphanumerische Zeichen verwenden">
+        data-validation-error-msg="<!--$T::SETTINGS_NAME_ERROR-->">
     </td>
     <td width="10%">
         &nbsp;
     </td>
     <td width="10%">
-        <label id="labelauto">MAC:</label>
+        <label id="labelauto"><!--$T::SETTINGS_MAC--></label>
     </td>
     <td width="30%">
         <input id="macs<!--$index-->" name="macs<!--$index-->" type="text" class="textfield" value="<!--$macs-->"
         data-validation="custom"
         data-validation-regexp="^([A-fa-f0-9]{2}:){5}([A-fa-f0-9]{2})(;([A-fa-f0-9]{2}:){5}([A-fa-f0-9]{2}))*$"
-        data-validation-error-msg="* Bitte eine gültige MAC Adresse eingeben (mehrere möglich, getrennt mit ;)">
+        data-validation-error-msg="<!--$T::SETTINGS_MAC_ERROR-->">
     </td>
     <td width="10%">
         &nbsp;
     </td>
     <td width="20%">
-        <button type=button onclick="deleteUser(parentElement.parentElement.rowIndex)">Löschen</button>
+        <button type=button onclick="deleteUser(parentElement.parentElement.rowIndex)"><!--$T::SETTINGS_DELETE--></button>
     </td>
 </tr>
