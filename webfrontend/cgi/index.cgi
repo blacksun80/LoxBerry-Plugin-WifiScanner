@@ -450,7 +450,7 @@ sub error
 	sub lbheader
 	{
 		 # Create Help page
-	  $helplink = "http://www.loxwiki.eu:80/x/uYCm";
+	  $helplink = "http://www.loxwiki.eu/display/LOXBERRY/Wifi+Scanner";
 	  open(F,"$installfolder/templates/plugins/$psubfolder/$lang/help.html") || die "Missing template plugins/$psubfolder/$lang/help.html";
 	    @help = <F>;
 	    foreach (@help)
