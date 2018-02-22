@@ -41,7 +41,7 @@ use IO::Socket;
 ##########################################################################
 
 # Version of this script
-$version = "1.0.0";
+$version = "1.1.0";
 
 # Figure out in which subfolder we are installed
 our $psubfolder = abs_path($0);

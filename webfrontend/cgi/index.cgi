@@ -88,7 +88,7 @@ our $i;
 ##########################################################################
 
 # Version of this script
-$version = "0.0.1";
+$version = "1.1.0";
 
 # Figure out in which subfolder we are installed
 $psubfolder = abs_path($0);
