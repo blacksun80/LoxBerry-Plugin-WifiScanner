@@ -29,6 +29,7 @@ SAVE=Speichern
 NAME=Name:
 MAC=MAC:
 DELETE=L&ouml;schen
+NEW_USER=Neuer Benutzer
 PORT_RANGE_ERROR=* Bitte geben Sie einen g&uuml;ltigen Port zwischen 1 und 65000 an.
 NAME_ERROR=* Bitte nur alphanumerische Zeichen verwenden.
 MAC_ERROR=* Bitte eine g&uuml;ltige MAC Adresse eingeben &#40;mehrere m&ouml;glich&#44; getrennt mit &#59;&#41;.

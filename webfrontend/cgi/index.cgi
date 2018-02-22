@@ -157,7 +157,7 @@ if (!-e "$installfolder/templates/plugins/$psubfolder/$lang/language.dat") {
 }
 
 # Read translations / phrases
-$planguagefile	= "$installfolder/templates/plugins/$psubfolder/de/language.dat";
+$planguagefile	= "$installfolder/templates/plugins/$psubfolder/$lang/language.dat";
 $pphrase = new Config::Simple($planguagefile);
 $pphrase->import_names('T');
 
