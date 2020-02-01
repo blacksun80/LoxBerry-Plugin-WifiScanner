@@ -19,375 +19,75 @@
 # Modules
 ##########################################################################
 
-use CGI::Carp qw(fatalsToBrowser);
-use CGI qw/:standard/;
-use LWP::UserAgent;
-use JSON qw( decode_json );
-use Config::Simple;
-use File::HomeDir;
-use Cwd 'abs_path';
-#use warnings;
-#use strict;
-#no strict "refs"; # we need it for template system
+use CGI;
+use LoxBerry::System;
+use LoxBerry::Web;
 
-##########################################################################
-# Variables
-##########################################################################
-
-our $cfg;
-our $pcfg;
-our $phrase;
-our $namef;
-our $value;
-our %query;
-our $lang;
-our $template_title;
-our $help;
-our @help;
-our $helptext;
-our $helplink;
-our $installfolder;
-our $planguagefile;
-our $version;
-our $error;
-our $saveformdata = 0;
-our $output;
-our $message;
-our $nexturl;
-our $do = "form";
-my  $home = File::HomeDir->my_home;
-our $psubfolder;
-our $pname;
-our $verbose;
-our $languagefileplugin;
-our $phraseplugin;
-our $scanner_active;
-our $cron;
-our $wulang;
-our $metric;
-our $sendudp;
-our $udpport;
-our $senddfc;
-our $sendhfc;
-our $var;
-our $theme;
-our $iconset;
-our $ua;
-our $res;
-our $json;
-our $urlstatus;
-our $urlstatuscode;
-our $decoded_json;
-our $query;
-our $querystation;
-our $found;
-our $i;
-
-##########################################################################
-# Read Settings
-##########################################################################
+# cgi
+my $cgi = CGI->new;
+$cgi->import_names('R');
 
 # Version of this script
-$version = "1.1.0";
+my $version = LoxBerry::System::pluginversion();
+my $pname = "wifi_scanner";
 
-# Figure out in which subfolder we are installed
-$psubfolder = abs_path($0);
-$psubfolder =~ s/(.*)\/(.*)\/(.*)$/$2/g;
+# config
+my $cfg = new Config::Simple("$lbpconfigdir/wifi_scanner.cfg");
 
-$cfg             = new Config::Simple("$home/config/system/general.cfg");
-$installfolder   = $cfg->param("BASE.INSTALLFOLDER");
-$lang            = $cfg->param("BASE.LANG");
+# Template
+my $template = HTML::Template->new(
+    filename => "$lbptemplatedir/index.html",
+    global_vars => 1,
+    loop_context_vars => 1,
+    die_on_bad_params => 0,
+    associate => $cfg,
+);
 
-#########################################################################
-# Parameter
-#########################################################################
+# Language
+my %L = LoxBerry::Web::readlanguage($template, "language.ini");
 
-# Everything from URL
-foreach (split(/&/,$ENV{'QUERY_STRING'}))
-{
-    ($namef,$value) = split(/=/,$_,2);
-    $namef =~ tr/+/ /;
-    $namef =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-    $value =~ tr/+/ /;
-    $value =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-    $query{$namef} = $value;
-}
 
-# Set parameters coming in - get over post
-if ( !$query{'saveformdata'} ) {
-    if ( param('saveformdata') ) {
-        $saveformdata = quotemeta(param('saveformdata'));
-    } else {
-        $saveformdata = 0;
-    }
-} else {
-    $saveformdata = quotemeta($query{'saveformdata'});
-}
-if ( !$query{'lang'} ) {
-    if ( param('lang') ) {
-        $lang = quotemeta(param('lang'));
-    } else {
-        $lang = "de";
-    }
-} else {
-    $lang = quotemeta($query{'lang'});
-}
-if ( !$query{'do'} ) {
-    if ( param('do')) {
-        $do = quotemeta(param('do'));
-    } else {
-        $do = "form";
-    }
-} else {
-    $do = quotemeta($query{'do'});
-}
-
-# Clean up saveformdata variable
-$saveformdata =~ tr/0-1//cd;
-$saveformdata = substr($saveformdata,0,1);
-
-# Init Language
-# Clean up lang variable
-$lang =~ tr/a-z//cd;
-$lang = substr($lang,0,2);
-
-# If there's no language phrases file for choosed language, use german as default
-if (!-e "$installfolder/templates/plugins/$psubfolder/$lang/language.dat") {
-    $lang = "de";
-}
-
-# Read translations / phrases
-$planguagefile	= "$installfolder/templates/plugins/$psubfolder/$lang/language.dat";
-$pphrase = new Config::Simple($planguagefile);
-$pphrase->import_names('T');
-
-##########################################################################
-# Main program
-##########################################################################
-
-if ($saveformdata) {
-  &save;
-
-} else {
-  &form;
-
-}
-
-exit;
-
-#####################################################
-#
-# Subroutines
-#
-#####################################################
-
-#####################################################
-# Form-Sub
-#####################################################
-
-sub form {
-    $pcfg             = new Config::Simple("$installfolder/config/plugins/$psubfolder/wifi_scanner.cfg");
-    $scanner_active   = $pcfg->param("BASE.ENABLED");
-    $cron             = $pcfg->param("BASE.CRON");
-    $udpport          = $pcfg->param("BASE.PORT");
-    $fritzbox         = $pcfg->param("BASE.FRITZBOX");
-    $fritzbox_port    = $pcfg->param("BASE.FRITZBOX_PORT");
-    $users            = $pcfg->param("BASE.USERS");
-
-    # GETWUDATA
-    if ($scanner_active eq "1") {
-        $scanner_active_on = "selected=selected";
-    } else {
-        $scanner_active_off = "selected=selected";
-    }
-    # CRON
-    if ($cron eq "1") {
-        $selectedcron1 = "selected=selected";
-    } elsif ($cron eq "3") {
-        $selectedcron2 = "selected=selected";
-    } elsif ($cron eq "5") {
-        $selectedcron3 = "selected=selected";
-    } elsif ($cron eq "10") {
-        $selectedcron4 = "selected=selected";
-    } elsif ($cron eq "15") {
-        $selectedcron5 = "selected=selected";
-    } elsif ($cron eq "30") {
-        $selectedcron6 = "selected=selected";
-    } elsif ($cron eq "60") {
-        $selectedcron7 = "selected=selected";
-    } else {
-        $selectedcron2 = "selected=selected";
-    }
-
-    print "Content-Type: text/html\n\n";
-
-    $template_title = $pphrase->param("TXT0001");
-
-    # Print Template
-    &lbheader;
-    open(F,"$installfolder/templates/plugins/$psubfolder/multi/settings_start.html") || die "Missing template plugins/$psubfolder/$lang/settings_end.html";
-    while (<F>) {
-        $_ =~ s/<!--\$(.*?)-->/${$1}/g;
-        print $_;
-    }
-    close(F);
-
-    for ($i=1;$i<=$users;$i++) {
-        $username = $pcfg->param("USER$i.NAME");
-        $macs = $pcfg->param("USER$i.MACS");
-        $index = $i;
-        open(F,"$installfolder/templates/plugins/$psubfolder/multi/user_row.html") || die "Missing template plugins/$psubfolder/$lang/user_row.html";
-        while (<F>) {
-            $_ =~ s/<!--\$(.*?)-->/${$1}/g;
-            print $_;
-        }
-        close(F);
-    }
-
-    open(F,"$installfolder/templates/plugins/$psubfolder/multi/settings_end.html") || die "Missing template plugins/$psubfolder/$lang/settings_end.html";
-    while (<F>) {
-        $_ =~ s/<!--\$(.*?)-->/${$1}/g;
-        print $_;
-    }
-    close(F);
-    &footer;
-    exit;
-
-}
-
-#####################################################
-# Save-Sub
-#####################################################
-
-sub save
-{
-    # Read Config
-    $pcfg    = new Config::Simple("$installfolder/config/plugins/$psubfolder/wifi_scanner.cfg");
-    $pname   = $pcfg->param("PLUGIN.SCRIPTNAME");
-
-    # Everything from Forms
-    $scanner_active = param('scanner_active');
-    $cron           = param('cron');
-    $udpport        = param('udpport');
-    $fritzbox       = param('fritzbox');
-    $fritzbox_port  = param('fritzbox_port');
-    $user_count     = param('user_count');
-
-    # Filter
-    $cron          = quotemeta($cron);
-    $udpport       = quotemeta($udpport);
-    #$fritzbox      = quotemeta($fritzbox);
-    $fritzbox_port = quotemeta($fritzbox_port);
-
-    # OK - now installing...
-
+if ($R::saveformdata) {
     # Write configuration file(s)
-    $pcfg->param("BASE.ENABLED", "$scanner_active");
-    $pcfg->param("BASE.PORT", "$udpport");
-    $pcfg->param("BASE.FRITZBOX", "$fritzbox");
-    $pcfg->param("BASE.FRITZBOX_PORT", "$fritzbox_port");
-    $pcfg->param("BASE.USERS", "$user_count");
-    $pcfg->param("BASE.CRON", "$cron");
+    $cfg->param("BASE.ENABLED", "$R::enable");
+    $cfg->param("BASE.PORT", "$R::udpport");
+    $cfg->param("BASE.FRITZBOX", "$R::fritzbox");
+    $cfg->param("BASE.FRITZBOX_PORT", "$R::fritzbox_port");
+    $cfg->param("BASE.USERS", "$R::user_count");
+    $cfg->param("BASE.CRON", "$R::cron");
 
-    for ($i=1;$i<=$user_count;$i++) {
-        $username = quotemeta(param("username$i"));
-        $macs = param("macs$i");
-        $pcfg->param("USER$i.NAME", "$username");
-        $pcfg->param("USER$i.MACS", "$macs");
+    for (my $i=1;$i<=$R::user_count;$i++) {
+        no strict 'refs';
+        my $username = ${"R::username$i"};
+        my $macs = ${"R::macs$i"};
+        $cfg->param("USER$i.NAME", "$username");
+        $cfg->param("USER$i.MACS", "$macs");
     }
 
-    $pcfg->save();
+    $cfg->save();
 
-    # Create Cronjob
-    if ($scanner_active eq "1") {
-        if ($cron eq "1") {
-            system ("ln -s $installfolder/webfrontend/cgi/plugins/$psubfolder/bin/check.pl $installfolder/system/cron/cron.01min/$pname");
-            unlink ("$installfolder/system/cron/cron.03min/$pname");
-            unlink ("$installfolder/system/cron/cron.05min/$pname");
-            unlink ("$installfolder/system/cron/cron.10min/$pname");
-            unlink ("$installfolder/system/cron/cron.15min/$pname");
-            unlink ("$installfolder/system/cron/cron.30min/$pname");
-            unlink ("$installfolder/system/cron/cron.hourly/$pname");
+    # Unlink all existing Cronjobs
+    unlink ("$lbhomedir/system/cron/cron.01min/$pname");
+    unlink ("$lbhomedir/system/cron/cron.03min/$pname");
+    unlink ("$lbhomedir/system/cron/cron.05min/$pname");
+    unlink ("$lbhomedir/system/cron/cron.10min/$pname");
+    unlink ("$lbhomedir/system/cron/cron.15min/$pname");
+    unlink ("$lbhomedir/system/cron/cron.30min/$pname");
+    unlink ("$lbhomedir/system/cron/cron.hourly/$pname");
+
+    # Create new Cronjob
+    if ($R::enable eq "1") {
+        if ($R::cron == 60) {
+            system ("ln -s $lbpbindir/check.pl $lbhomedir/system/cron/cron.hourly/$pname");
+        } else {
+            my $number = sprintf("%02d", $R::cron);
+            system ("ln -s $lbpbindir/check.pl $lbhomedir/system/cron/cron.".$number."min/$pname");
         }
-        if ($cron eq "3") {
-            system ("ln -s $installfolder/webfrontend/cgi/plugins/$psubfolder/bin/check.pl $installfolder/system/cron/cron.03min/$pname");
-            unlink ("$installfolder/system/cron/cron.01min/$pname");
-            unlink ("$installfolder/system/cron/cron.05min/$pname");
-            unlink ("$installfolder/system/cron/cron.10min/$pname");
-            unlink ("$installfolder/system/cron/cron.15min/$pname");
-            unlink ("$installfolder/system/cron/cron.30min/$pname");
-            unlink ("$installfolder/system/cron/cron.hourly/$pname");
-        }
-        if ($cron eq "5") {
-            system ("ln -s $installfolder/webfrontend/cgi/plugins/$psubfolder/bin/check.pl $installfolder/system/cron/cron.05min/$pname");
-            unlink ("$installfolder/system/cron/cron.01min/$pname");
-            unlink ("$installfolder/system/cron/cron.03min/$pname");
-            unlink ("$installfolder/system/cron/cron.10min/$pname");
-            unlink ("$installfolder/system/cron/cron.15min/$pname");
-            unlink ("$installfolder/system/cron/cron.30min/$pname");
-            unlink ("$installfolder/system/cron/cron.hourly/$pname");
-        }
-        if ($cron eq "10") {
-            system ("ln -s $installfolder/webfrontend/cgi/plugins/$psubfolder/bin/check.pl $installfolder/system/cron/cron.10min/$pname");
-            unlink ("$installfolder/system/cron/cron.1min/$pname");
-            unlink ("$installfolder/system/cron/cron.3min/$pname");
-            unlink ("$installfolder/system/cron/cron.5min/$pname");
-            unlink ("$installfolder/system/cron/cron.15min/$pname");
-            unlink ("$installfolder/system/cron/cron.30min/$pname");
-            unlink ("$installfolder/system/cron/cron.hourly/$pname");
-        }
-        if ($cron eq "15")  {
-            system ("ln -s $installfolder/webfrontend/cgi/plugins/$psubfolder/bin/check.pl $installfolder/system/cron/cron.15min/$pname");
-            unlink ("$installfolder/system/cron/cron.01min/$pname");
-            unlink ("$installfolder/system/cron/cron.03min/$pname");
-            unlink ("$installfolder/system/cron/cron.05min/$pname");
-            unlink ("$installfolder/system/cron/cron.10min/$pname");
-            unlink ("$installfolder/system/cron/cron.30min/$pname");
-            unlink ("$installfolder/system/cron/cron.hourly/$pname");
-        }
-        if ($cron eq "30") {
-            system ("ln -s $installfolder/webfrontend/cgi/plugins/$psubfolder/bin/check.pl $installfolder/system/cron/cron.30min/$pname");
-            unlink ("$installfolder/system/cron/cron.01min/$pname");
-            unlink ("$installfolder/system/cron/cron.03min/$pname");
-            unlink ("$installfolder/system/cron/cron.05min/$pname");
-            unlink ("$installfolder/system/cron/cron.10min/$pname");
-            unlink ("$installfolder/system/cron/cron.15min/$pname");
-            unlink ("$installfolder/system/cron/cron.hourly/$pname");
-        }
-        if ($cron eq "60")  {
-            system ("ln -s $installfolder/webfrontend/cgi/plugins/$psubfolder/bin/check.pl $installfolder/system/cron/cron.hourly/$pname");
-            unlink ("$installfolder/system/cron/cron.01min/$pname");
-            unlink ("$installfolder/system/cron/cron.03min/$pname");
-            unlink ("$installfolder/system/cron/cron.05min/$pname");
-            unlink ("$installfolder/system/cron/cron.10min/$pname");
-            unlink ("$installfolder/system/cron/cron.15min/$pname");
-            unlink ("$installfolder/system/cron/cron.30min/$pname");
-        }
-    } else {
-        unlink ("$installfolder/system/cron/cron.01min/$pname");
-        unlink ("$installfolder/system/cron/cron.03min/$pname");
-        unlink ("$installfolder/system/cron/cron.05min/$pname");
-        unlink ("$installfolder/system/cron/cron.10min/$pname");
-        unlink ("$installfolder/system/cron/cron.15min/$pname");
-        unlink ("$installfolder/system/cron/cron.30min/$pname");
-        unlink ("$installfolder/system/cron/cron.hourly/$pname");
     }
+    # Template output
+    &save;
 
-    $template_title = $pphrase->param("TXT0001");
-    $message = $pphrase->param("TXT0002");
-    $nexturl = "./index.cgi?do=form";
-
-    print "Content-Type: text/html\n\n";
-    &lbheader;
-    open(F,"$installfolder/templates/system/$lang/success.html") || die "Missing template system/$lang/error.html";
-    while (<F>) {
-        $_ =~ s/<!--\$(.*?)-->/${$1}/g;
-        print $_;
-    }
-    close(F);
-    &footer;
-
-    if ($scanner_active eq "1") {
+    if ($R::enable eq "1") {
         # Start one scan right away
         # Without the following workaround
         # the script cannot be executed as
@@ -399,66 +99,80 @@ sub save
             open STDIN, "</dev/null";
             open STDOUT, ">/dev/null";
             open STDERR, ">/dev/null";
-            system("$installfolder/webfrontend/cgi/plugins/$psubfolder/bin/check.pl &");
+            system("$lbpbindir/check.pl &");
         }
     }
+
     exit;
 }
 
+# Enabled
+@values = ('0', '1' );
+%labels = (
+      '0' => $L{'SETTINGS.OFF'},
+      '1' => $L{'SETTINGS.ON'},
+  );
+my $enable = $cgi->popup_menu(
+      -name    => 'enable',
+      -id      => 'enable',
+      -values  => \@values,
+      -labels  => \%labels,
+      -default => $cfg->param('BASE.ENABLED'),
+  );
+$template->param( ENABLE => $enable );
+
+# Cron
+@values = ('1', '3', '5', '10', '15', '30', '60' );
+%labels = (
+      '1'  => $L{'SETTINGS.CRON_1'},
+      '3'  => $L{'SETTINGS.CRON_2'},
+      '5'  => $L{'SETTINGS.CRON_3'},
+      '10' => $L{'SETTINGS.CRON_4'},
+      '15' => $L{'SETTINGS.CRON_5'},
+      '30' => $L{'SETTINGS.CRON_6'},
+      '60' => $L{'SETTINGS.CRON_7'},
+  );
+my $cron = $cgi->popup_menu(
+      -name    => 'cron',
+      -id      => 'cron',
+      -values  => \@values,
+      -labels  => \%labels,
+      -default => $cfg->param('BASE.CRON'),
+  );
+$template->param( CRON => $cron );
+
+my @users= ();
+my $user_count = $cfg->param('BASE.USERS');
+for ($i=1;$i<=$user_count;$i++) {
+    my %d;
+    $d{INDEX} = $i;
+    $d{NAME} = $cfg->param("USER$i.NAME");
+    $d{MACS} = $cfg->param("USER$i.MACS");
+
+    push(@users, \%d);
+}
+$template->param( USER_DATA => \@users);
+
+$template->param( LOG_DIR => $lbplogdir);
+$template->param( "FORM", 1);
+
+# Template
+LoxBerry::Web::lbheader($L{'SETTINGS.PLUGINTITLE'} . " V$version", "http://www.loxwiki.eu/display/LOXBERRY/Wifi+Scanner", "help.html");
+print $template->output();
+LoxBerry::Web::lbfooter();
+
+exit;
 
 #####################################################
-# Error-Sub
+# Save
 #####################################################
 
-sub error
+sub save
 {
-    $template_title = $pphrase->param("TXT0001");
-    print "Content-Type: text/html\n\n";
-    &lbheader;
-    open(F,"$installfolder/templates/system/$lang/error.html") || die "Missing template system/$lang/error.html";
-    while (<F>) {
-        $_ =~ s/<!--\$(.*?)-->/${$1}/g;
-        print $_;
-    }
-    close(F);
-    &footer;
+    $template->param( "SAVE", 1);
+    LoxBerry::Web::lbheader($L{'SETTINGS.PLUGINTITLE'} . " V$version", "http://www.loxwiki.eu/display/LOXBERRY/Wifi+Scanner", "");
+    print $template->output();
+    LoxBerry::Web::lbfooter();
+
     exit;
-}
-
-#####################################################
-# Page-Header-Sub
-#####################################################
-
-sub lbheader
-{
-    # Create Help page
-    $helplink = "http://www.loxwiki.eu/display/LOXBERRY/Wifi+Scanner";
-    open(F,"$installfolder/templates/plugins/$psubfolder/$lang/help.html") || die "Missing template plugins/$psubfolder/$lang/help.html";
-    @help = <F>;
-    foreach (@help) {
-        s/[\n\r]/ /g;
-        $_ =~ s/<!--\$(.*?)-->/${$1}/g;
-        $helptext = $helptext . $_;
-    }
-    close(F);
-    open(F,"$installfolder/templates/system/$lang/header.html") || die "Missing template system/$lang/header.html";
-    while (<F>) {
-        $_ =~ s/<!--\$(.*?)-->/${$1}/g;
-        print $_;
-    }
-    close(F);
-}
-
-#####################################################
-# Footer
-#####################################################
-
-sub footer
-{
-    open(F,"$installfolder/templates/system/$lang/footer.html") || die "Missing template system/$lang/footer.html";
-    while (<F>) {
-        $_ =~ s/<!--\$(.*?)-->/${$1}/g;
-        print $_;
-    }
-    close(F);
 }
