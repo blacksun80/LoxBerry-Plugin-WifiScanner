@@ -56,7 +56,7 @@ my $pcfg            = new Config::Simple("$lbpconfigdir/wifi_scanner.cfg");
 my $udpport         = $pcfg->param("BASE.PORT");
 my $ip              = $pcfg->param("BASE.FRITZBOX");
 my $port            = $pcfg->param("BASE.FRITZBOX_PORT");
-my $users           = $pcfg->param("BASE.USERS");
+my $user_count      = $pcfg->param("BASE.USERS");
 
 # Commandline options
 my $verbose = '';
@@ -72,92 +72,171 @@ if (! %miniservers) {
     lox_die "No Miniservers configured";
 }
 
-for ($i=1;$i<=$users;$i++) {
-    ${"username" . "$i"} = $pcfg->param("USER$i.NAME");
-    ${"macs" . "$i"} = $pcfg->param("USER$i.MACS");
-}
+LOGDEB "Reading configuration file";
+my @users = ();
+for ($i=1;$i<=$user_count;$i++) {
+    my %user;
+    $user{NAME} = $pcfg->param("USER$i.NAME");
+    LOGDEB "Found config for $user{NAME}";
+    my $input = $pcfg->param("USER$i.MACS");
+    my @input_splitted = split /;/, $input;
 
-# disable SSL checks. No signed certificate!
-$ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
-$ENV{HTTPS_DEBUG} = 1;
-
-# Discover Service Parameters
-my $ua = new LWP::UserAgent;
-$ua->default_headers;
-$ua->ssl_opts( verify_hostname => 0 ,SSL_verify_mode => 0x00);
-
-# Read all available services
-my $resp_discover = $ua->get("https://$ip:$port/tr64desc.xml");
-my $xml_discover;
-if ( $resp_discover->is_success ) {
-    $xml_discover = $resp_discover->decoded_content;
-} else {
-    lox_die $resp_discover->status_line;
-}
-my $discover = XMLin($xml_discover);
-LOGINF "$discover->{device}->{modelName} detected...";
-
-# Parse XML service response, get needed parameters for LAN host service
-my $control_url = "not set";
-my $service_type = "not set";
-my $service_command = "GetSpecificHostEntry"; # fixed command for requesting info of specific MAC
-foreach(@{$discover->{device}->{deviceList}->{device}->[0]->{serviceList}->{service}}) {
-    if("urn:LanDeviceHosts-com:serviceId:Hosts1" =~ m/.*$_->{serviceId}.*/) {
-        $control_url = $_->{controlURL};
-        $service_type = $_->{serviceType};
+    my @ips = ();
+    my @macs = ();
+    LOGDEB "Identifing macs in $input";
+    foreach my $in (@input_splitted) {
+        if ($in =~ /^([A-fa-f0-9]{2}:){5}([A-fa-f0-9]{2})$/) {
+            LOGDEB "Identified $in as MAC ADDRESS";
+            push(@macs, $in);
+        } else {
+            LOGDEB "Identified $in as IP ADDRESS";
+            push(@ips, $in);
+        }
     }
+    $user{MACS} = \@macs;
+    $user{IPS} = \@ips;
+    $user{ONLINE} = 0;
+    push(@users, \%user);
 }
 
-if ($control_url eq "not set" or $service_type eq "not set") {
-    lox_die "control URL/service type not found. Cannot request host info!";
-}
+if (1) {
+    LOGINF "Establishing connection to the Router to check for mac addresses";
+    # disable SSL checks. No signed certificate!
+    $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
+    $ENV{HTTPS_DEBUG} = 1;
 
-# Prepare request for query LAN host
-$ua->default_header( 'SOAPACTION' => "$service_type#$service_command" );
-my $any_online = 0; # if arg any specified
+    # Discover Service Parameters
+    my $ua = new LWP::UserAgent;
+    $ua->default_headers;
+    $ua->ssl_opts( verify_hostname => 0 ,SSL_verify_mode => 0x00);
 
-for ($i=1;$i<=$users;$i++) {
-    my $macs = ${"macs" . "$i"};
-    my @macs_splitted = split /;/, $macs;
-    ${"online" . "$i"} = 0;
+    # Read all available services
+    my $resp_discover = $ua->get("https://$ip:$port/tr64desc.xml");
+    my $xml_discover;
+    if ( $resp_discover->is_success ) {
+        $xml_discover = $resp_discover->decoded_content;
+    } else {
+        lox_die $resp_discover->status_line;
+    }
+    my $discover = XMLin($xml_discover);
+    LOGINF "$discover->{device}->{modelName} detected...";
 
-    LOGINF "Checking devices from User: ".${"username" . "$i"};
-    foreach my $mac (@macs_splitted) {
-        my $init_request = <<EOD;
-        <?xml version="1.0" encoding="utf-8"?>
-        <s:Envelope s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" >
-                <s:Header>
-                </s:Header>
-                <s:Body>
-                        <u:$service_command xmlns:u="$service_type">
-                                <NewMACAddress>$mac</NewMACAddress>
-                        </u:$service_command>
-                </s:Body>
-        </s:Envelope>
+    # Parse XML service response, get needed parameters for LAN host service
+    my $control_url = "not set";
+    my $service_type = "not set";
+    my $service_command = "GetSpecificHostEntry"; # fixed command for requesting info of specific MAC
+    foreach(@{$discover->{device}->{deviceList}->{device}->[0]->{serviceList}->{service}}) {
+        if("urn:LanDeviceHosts-com:serviceId:Hosts1" =~ m/.*$_->{serviceId}.*/) {
+            $control_url = $_->{controlURL};
+            $service_type = $_->{serviceType};
+        }
+    }
+
+    if ($control_url eq "not set" or $service_type eq "not set") {
+        lox_die "control URL/service type not found. Cannot request host info!";
+    }
+
+    # Prepare request for query LAN host
+    $ua->default_header( 'SOAPACTION' => "$service_type#$service_command" );
+
+    for ($i=0;$i<$user_count;$i++) {
+        my @macs = @{$users[$i]{MACS}};
+        if (scalar(@macs) == 0) {
+            LOGINF "Skipping $users[$i]{NAME}. No mac addresses provided";
+            next;
+        }
+
+        LOGINF "Checking devices from User: $users[$i]{NAME}";
+        foreach my $mac (@macs) {
+            my $init_request = <<EOD;
+            <?xml version="1.0" encoding="utf-8"?>
+            <s:Envelope s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" >
+                    <s:Header>
+                    </s:Header>
+                    <s:Body>
+                            <u:$service_command xmlns:u="$service_type">
+                                    <NewMACAddress>$mac</NewMACAddress>
+                            </u:$service_command>
+                    </s:Body>
+            </s:Envelope>
 EOD
 
-        my $init_url = "https://$ip:$port$control_url";
-        my $resp_init = $ua->post($init_url, Content_Type => 'text/xml; charset=utf-8', Content => $init_request);
-        my $xml_mac_resp = XMLin($resp_init->decoded_content);
+            my $init_url = "https://$ip:$port$control_url";
+            my $resp_init = $ua->post($init_url, Content_Type => 'text/xml; charset=utf-8', Content => $init_request);
+            my $xml_mac_resp = XMLin($resp_init->decoded_content);
 
-        if(exists $xml_mac_resp->{'s:Body'}->{'s:Fault'}) {
-            if($xml_mac_resp->{'s:Body'}->{'s:Fault'}->{detail}->{UPnPError}->{errorCode} eq "714") {
-                LOGERR "Mac $mac not found in FritzBox Database!\n";
+            if(exists $xml_mac_resp->{'s:Body'}->{'s:Fault'}) {
+                if($xml_mac_resp->{'s:Body'}->{'s:Fault'}->{detail}->{UPnPError}->{errorCode} eq "714") {
+                    LOGERR "Mac $mac not found in FritzBox Database!\n";
+                }
+            }
+            if(exists $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'})
+            {
+                if($xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewActive} eq "1") {
+                    my $name = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewHostName};
+                    my $ip = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewIPAddress};
+                    my $iftype =  $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewInterfaceType};
+                    LOGINF "Mac $mac ($name) is online with IP $ip on $iftype";
+                    $users[$i]{ONLINE} = 1;
+                }
+                if($xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewActive} eq "0") {
+                    my $name = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewHostName};
+                    my $ip = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewIPAddress};
+                    LOGINF "Mac $mac ($name) is offline";
+                }
             }
         }
-        if(exists $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'})
-        {
-            if($xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewActive} eq "1") {
-                my $name = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewHostName};
-                my $ip = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewIPAddress};
-                my $iftype =  $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewInterfaceType};
-                LOGINF "Mac $mac ($name) is online with IP $ip on $iftype";
-                ${"online" . "$i"} = 1;
-            }
-            if($xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewActive} eq "0") {
-                my $name = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewHostName};
-                LOGINF "Mac $mac ($name) is offline";
-            }
+    }
+} else {
+    LOGINF "Ping devices without asking the Router first";
+}
+
+LOGDEB "Iterating over all users to do actives scans where needed";
+foreach my $u (@users) {
+    my %user = %{$u};
+    if ($user{ONLINE}) {
+        LOGDEB "Skipping $user{NAME}, because we already have a result";
+        next;
+    }
+
+    LOGINF "Pinging Devices for user: $user{NAME}";
+    my @macs = @{$user{MACS}};
+    my @ips = @{$user{IPS}};
+
+    $log_cmd = "";
+    if ($log->loglevel() >= 7) {
+        my $logfile = $log->filename();
+       $log_cmd = "2>&1 >> $logfile";
+    }
+
+    $found = 0;
+    # Check with ip addresses
+    foreach my $ip (@ips) {
+        LOGINF "Ping $ip";
+        if (system("arping -C1 -c20 $ip $log_cmd") == 0) {
+            LOGINF "Host $ip is online";
+            $users[$i]{ONLINE} = 1;
+            $found = 1;
+            last;
+        } else {
+            LOGINF "Host $ip is offline";
+        }
+    }
+
+    # If one of the device was found by pinging the IP addresses no need to check the mac addresses
+    if ($found) {
+        next;
+    }
+
+    # Check with mac addresses
+    foreach my $mac (@macs) {
+        LOGINF "Ping $mac";
+        if (system("arping -C1 -c20 $mac $log_cmd") == 0) {
+            LOGINF "Mac $mac is online";
+            $users[$i]{ONLINE} = 1;
+            last;
+        } else {
+            LOGINF "Mac $mac is offline";
         }
     }
 }
@@ -172,9 +251,9 @@ foreach my $ms (sort keys %miniservers) {
          Type        => SOCK_DGRAM
     ) or lox_die "Could not create socket: $!";
 
-    for ($j=1;$j<=$users;$j++) {
-        $sock->send(${"username" . "$j"}.":".${"online" . "$j"}) or lox_die "Send error: $!";
-        LOGINF "Sending Data '".${"username" . "$j"}.":".${"online" . "$j"}."' to $miniservers{$ms}{Name} IP: $miniservers{$ms}{IPAddress} Port:$udpport";
+    for ($j=0;$j<$user_count;$j++) {
+        $sock->send("$users[$j]{NAME}:$users[$j]{ONLINE}") or lox_die "Send error: $!";
+        LOGINF "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to $miniservers{$ms}{Name} IP: $miniservers{$ms}{IPAddress} Port:$udpport";
     }
     $sock->close();
 }
