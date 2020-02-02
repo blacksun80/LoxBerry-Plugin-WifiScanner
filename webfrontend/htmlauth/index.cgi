@@ -153,7 +153,8 @@ for ($i=1;$i<=$user_count;$i++) {
 }
 $template->param( USER_DATA => \@users);
 
-$template->param( LOG_DIR => $lbplogdir);
+$template->param( LOG_URL => "/admin/system/tools/logfile.cgi?logfile=$lbplogdir/wifi_scanner.log&header=html&format=template&only=once&package=$lbpplugindir&name=wifi_scanner.log");
+$template->param( LOG_URL => LoxBerry::Web::loglist_url());
 $template->param( "FORM", 1);
 
 # Template

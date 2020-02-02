@@ -24,6 +24,9 @@
 # Modules
 ##########################################################################
 
+use LoxBerry::System;
+use LoxBerry::Log;
+
 use LWP::Simple;
 use LWP::UserAgent;
 use XML::Simple;
@@ -36,26 +39,20 @@ use open qw(:std :utf8);
 use POSIX qw/ strftime /;
 use IO::Socket;
 
+sub lox_die($);
+
 ##########################################################################
 # Read Settings
 ##########################################################################
 
 # Version of this script
-$version = "1.1.0";
+$version = LoxBerry::System::pluginversion();
 
-# Figure out in which subfolder we are installed
-our $psubfolder = abs_path($0);
-$psubfolder =~ s/(.*)\/(.*)\/bin\/(.*)$/$2/g;
+my $log = LoxBerry::Log->new ( name => 'wifi_scanner' , addtime => 1, );
 
-my $home = File::HomeDir->my_home;
+%miniservers = LoxBerry::System::get_miniservers();
 
-my $cfg             = new Config::Simple("$home/config/system/general.cfg");
-my $lang            = $cfg->param("BASE.LANG");
-my $installfolder   = $cfg->param("BASE.INSTALLFOLDER");
-my $miniservers     = $cfg->param("BASE.MINISERVERS");
-my $clouddns        = $cfg->param("BASE.CLOUDDNS");
-
-my $pcfg            = new Config::Simple("$installfolder/config/plugins/$psubfolder/wifi_scanner.cfg");
+my $pcfg            = new Config::Simple("$lbpconfigdir/wifi_scanner.cfg");
 my $udpport         = $pcfg->param("BASE.PORT");
 my $ip              = $pcfg->param("BASE.FRITZBOX");
 my $port            = $pcfg->param("BASE.FRITZBOX_PORT");
@@ -69,8 +66,11 @@ GetOptions ('verbose' => \$verbose,
             'quiet'   => sub { $verbose = 0 });
 
 # Starting...
-my $logmessage = "<INFO> Starting $0 Version $version\n";
-&log;
+LOGSTART "Starting $0 Version $version";
+
+if (! %miniservers) {
+    lox_die "No Miniservers configured";
+}
 
 for ($i=1;$i<=$users;$i++) {
     ${"username" . "$i"} = $pcfg->param("USER$i.NAME");
@@ -92,11 +92,10 @@ my $xml_discover;
 if ( $resp_discover->is_success ) {
     $xml_discover = $resp_discover->decoded_content;
 } else {
-    die $resp_discover->status_line;
+    lox_die $resp_discover->status_line;
 }
 my $discover = XMLin($xml_discover);
-$logmessage = "<INFO> $discover->{device}->{modelName} detected...\n";
-&log;
+LOGINF "$discover->{device}->{modelName} detected...";
 
 # Parse XML service response, get needed parameters for LAN host service
 my $control_url = "not set";
@@ -110,7 +109,7 @@ foreach(@{$discover->{device}->{deviceList}->{device}->[0]->{serviceList}->{serv
 }
 
 if ($control_url eq "not set" or $service_type eq "not set") {
-    die "control URL/service type not found. Cannot request host info!";
+    lox_die "control URL/service type not found. Cannot request host info!";
 }
 
 # Prepare request for query LAN host
@@ -122,8 +121,7 @@ for ($i=1;$i<=$users;$i++) {
     my @macs_splitted = split /;/, $macs;
     ${"online" . "$i"} = 0;
 
-    $logmessage = "<INFO> Checking devices from User: ".${"username" . "$i"}."\n";
-    &log;
+    LOGINF "Checking devices from User: ".${"username" . "$i"};
     foreach my $mac (@macs_splitted) {
         my $init_request = <<EOD;
         <?xml version="1.0" encoding="utf-8"?>
@@ -144,8 +142,7 @@ EOD
 
         if(exists $xml_mac_resp->{'s:Body'}->{'s:Fault'}) {
             if($xml_mac_resp->{'s:Body'}->{'s:Fault'}->{detail}->{UPnPError}->{errorCode} eq "714") {
-                $logmessage = "<ERROR> Mac $mac not found in FritzBox Database!\n";
-                &log;
+                LOGERR "Mac $mac not found in FritzBox Database!\n";
             }
         }
         if(exists $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'})
@@ -154,90 +151,36 @@ EOD
                 my $name = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewHostName};
                 my $ip = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewIPAddress};
                 my $iftype =  $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewInterfaceType};
-                $logmessage = "<INFO> Mac $mac ($name) is online with IP $ip on $iftype\n";
-                &log;
+                LOGINF "Mac $mac ($name) is online with IP $ip on $iftype";
                 ${"online" . "$i"} = 1;
             }
             if($xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewActive} eq "0") {
                 my $name = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewHostName};
-                $logmessage = "<INFO> Mac $mac ($name) is offline\n";
-                &log;
+                LOGINF "Mac $mac ($name) is offline";
             }
         }
     }
 }
 
 # Creating UDP socket to every Miniserver
-for ($i=1;$i<=$miniservers;$i++) {
-
-    ${"miniservername" . "$i"} = $cfg->param("MINISERVER$i.NAME");
-
-    if ( $cfg->param("MINISERVER$i.USECLOUDDNS") ) {
-        my $miniservermac = $cfg->param("MINISERVER$i.CLOUDURL");
-        my $dns_info = `$home/webfrontend/cgi/system/tools/showclouddns.pl $miniservermac`;
-        my @dns_info_pieces = split /:/, $dns_info;
-        if ($dns_info_pieces[0]) {
-            $dns_info_pieces[0] =~ s/^\s+|\s+$//g;
-            ${"miniserverip" . "$i"} = $dns_info_pieces[0];
-            $logmessage = "<INFO> Send Data to " . ${"miniservername" . "$i"} . " at " . ${"miniserverip" . "$i"} . " using CloudDNS.\n";
-            &log;
-        } else {
-            ${"miniserverip" . "$i"} = "127.0.0.1";
-            $logmessage = "<ERROR> Could not find IP Address for " . ${"miniservername" . "$i"} . " using CloudDNS.\n";
-            &log;
-        }
-    } else {
-        if ( $cfg->param("MINISERVER$i.IPADDRESS") ) {
-            ${"miniserverip" . "$i"} = $cfg->param("MINISERVER$i.IPADDRESS");
-            $logmessage = "<INFO> Using " . ${"miniservername" . "$i"}  . " at " . ${"miniserverip" . "$i"} . ".\n";
-            &log;
-        } else {
-            ${"miniserverip" . "$i"} = "127.0.0.1";
-            $logmessage = "<ERROR> Could not find IP Address for " . ${"miniservername" . "$i"} . ".\n";
-            &log;
-        }
-    }
-}
-for ($i=1;$i<=$miniservers;$i++) {
+foreach my $ms (sort keys %miniservers) {
     # Send value
     my $sock = IO::Socket::INET->new(
          Proto    => 'udp',
          PeerPort => $udpport,
-         PeerAddr => ${"miniserverip" . "$i"},
+         PeerAddr => $miniservers{$ms}{IPAddress},
          Type        => SOCK_DGRAM
-    ) or die "<ERROR> Could not create socket: $!\n";
+    ) or lox_die "Could not create socket: $!";
 
     for ($j=1;$j<=$users;$j++) {
-        &log;
-        $sock->send(${"username" . "$j"}.":".${"online" . "$j"}) or die "Send error: $!\n";
-        $logmessage = "<INFO> Sending Data '".${"username" . "$j"}.":".${"online" . "$j"}."' to " . ${"miniservername" . "$i"} . ". IP:" . ${"miniserverip" . "$i"} . " Port:$udpport\n";
-        &log;
+        $sock->send(${"username" . "$j"}.":".${"online" . "$j"}) or lox_die "Send error: $!";
+        LOGINF "Sending Data '".${"username" . "$j"}.":".${"online" . "$j"}."' to $miniservers{$ms}{Name} IP: $miniservers{$ms}{IPAddress} Port:$udpport";
     }
     $sock->close();
 }
 
-#
-# Subroutines
-#
-
-sub log {
-    # Print
-    if ($verbose) {print $logmessage;}
-
-    # Today's date for logfile
-    (my $sec,my $min,my $hour,my $mday,my $mon,my $year,my $wday,my $yday,my $isdst) = localtime();
-    $year = $year+1900;
-    $mon = $mon+1;
-    $mon = sprintf("%02d", $mon);
-    $mday = sprintf("%02d", $mday);
-    $hour = sprintf("%02d", $hour);
-    $min = sprintf("%02d", $min);
-    $sec = sprintf("%02d", $sec);
-
-    # Logfile
-    open(F,">>$home/log/plugins/$psubfolder/wifi_scanner.log");
-
-    print F "$year-$mon-$mday $hour:$min:$sec : $logmessage";
-    close (F);
-    return();
+sub lox_die($)
+{
+    LOGCRIT $_[0];
+    exit(1);
 }
