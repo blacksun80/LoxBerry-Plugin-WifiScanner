@@ -192,8 +192,8 @@ EOD
 }
 
 LOGDEB "Iterating over all users to do actives scans where needed";
-foreach my $u (@users) {
-    my %user = %{$u};
+for ($i=0;$i<$user_count;$i++) {
+    my %user = %{$users[$i]};
     if ($user{ONLINE}) {
         LOGDEB "Skipping $user{NAME}, because we already have a result";
         next;
@@ -206,14 +206,15 @@ foreach my $u (@users) {
     $log_cmd = "";
     if ($log->loglevel() >= 7) {
         my $logfile = $log->filename();
-       $log_cmd = "2>&1 >> $logfile";
+       $log_cmd = ">> $logfile 2>&1";
     }
 
     $found = 0;
     # Check with ip addresses
     foreach my $ip (@ips) {
         LOGINF "Ping $ip";
-        if (system("arping -C1 -c20 $ip $log_cmd") == 0) {
+        # This sends really a lot of request, but it makes sure we get an answer as fast as possible
+        if (system("sudo /usr/sbin/arping -w 200 -C1 -c5000 $ip $log_cmd") == 0) {
             LOGINF "Host $ip is online";
             $users[$i]{ONLINE} = 1;
             $found = 1;
@@ -231,7 +232,8 @@ foreach my $u (@users) {
     # Check with mac addresses
     foreach my $mac (@macs) {
         LOGINF "Ping $mac";
-        if (system("arping -C1 -c20 $mac $log_cmd") == 0) {
+        # This sends really a lot of request, but it makes sure we get an answer as fast as possible
+        if (system("sudo /usr/sbin/arping -w 200 -C1 -c5000 $mac $log_cmd") == 0) {
             LOGINF "Mac $mac is online";
             $users[$i]{ONLINE} = 1;
             last;
