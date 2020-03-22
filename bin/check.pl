@@ -54,6 +54,7 @@ my $log = LoxBerry::Log->new ( name => 'wifi_scanner' , addtime => 1, );
 
 my $pcfg            = new Config::Simple("$lbpconfigdir/wifi_scanner.cfg");
 my $udpport         = $pcfg->param("BASE.PORT");
+my $fritz_enable    = $pcfg->param("BASE.FRITZBOX_ENABLE");
 my $ip              = $pcfg->param("BASE.FRITZBOX");
 my $port            = $pcfg->param("BASE.FRITZBOX_PORT");
 my $user_count      = $pcfg->param("BASE.USERS");
@@ -99,7 +100,7 @@ for ($i=1;$i<=$user_count;$i++) {
     push(@users, \%user);
 }
 
-if (1) {
+if ($fritz_enable) {
     LOGINF "Establishing connection to the Router to check for mac addresses";
     # disable SSL checks. No signed certificate!
     $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;

@@ -92,6 +92,18 @@
                             </tr>
                             <tr>
                                     <td width="25%">
+                                        <label id="labelapikey"><TMPL_VAR SETTINGS.FRITZ_ENABLE></label>
+                                    </td>
+                                    <td colspan="2" width="50%">
+                                        <fieldset>
+                                        <TMPL_VAR FRITZ_ENABLE>
+                                        </fieldset>
+                                    </td>
+                                    <td width="25%">
+                                    </td>
+                            </tr>
+                            <tr>
+                                    <td width="25%">
                                         <label id="labelapikey"><TMPL_VAR SETTINGS.FRITZ_IP></label>
                                     </td>
                                     <td colspan="2" width="50%">
@@ -146,6 +158,7 @@
 <script>
 // Add some attributes PERL::CGI doesn't provide
 $('#enable').attr('data-role','flipswitch');
+$('#fritz_enable').attr('data-role','flipswitch');
 // Form Validation
 $( document ).ready(function()
 {

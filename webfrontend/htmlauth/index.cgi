@@ -51,6 +51,7 @@ if ($R::saveformdata) {
     # Write configuration file(s)
     $cfg->param("BASE.ENABLED", "$R::enable");
     $cfg->param("BASE.PORT", "$R::udpport");
+    $cfg->param("BASE.FRITZBOX_ENABLE", "$R::fritz_enable");
     $cfg->param("BASE.FRITZBOX", "$R::fritzbox");
     $cfg->param("BASE.FRITZBOX_PORT", "$R::fritzbox_port");
     $cfg->param("BASE.USERS", "$R::user_count");
@@ -140,6 +141,21 @@ my $cron = $cgi->popup_menu(
       -default => $cfg->param('BASE.CRON'),
   );
 $template->param( CRON => $cron );
+
+# Fritz Enabled
+@values = ('0', '1' );
+%labels = (
+      '0' => $L{'SETTINGS.OFF'},
+      '1' => $L{'SETTINGS.ON'},
+  );
+my $fritz_enable = $cgi->popup_menu(
+      -name    => 'fritz_enable',
+      -id      => 'fritz_enable',
+      -values  => \@values,
+      -labels  => \%labels,
+      -default => $cfg->param('BASE.FRITZBOX_ENABLE'),
+  );
+$template->param( FRITZ_ENABLE => $fritz_enable );
 
 my @users= ();
 my $user_count = $cfg->param('BASE.USERS');
