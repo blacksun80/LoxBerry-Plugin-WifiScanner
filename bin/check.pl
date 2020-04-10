@@ -263,6 +263,7 @@ if ($udp_enable) {
             $sock->send("$users[$j]{NAME}:$users[$j]{ONLINE}") or lox_die "Send error: $!";
             LOGINF "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to $miniservers{$ms}{Name} IP: $miniservers{$ms}{IPAddress} Port:$udpport";
         }
+        LOGEND "Operation finished sucessfully.";
         $sock->close();
     }
 } else {
@@ -286,10 +287,10 @@ if ($udp_enable) {
     }
      
         for ($j=0;$j<$user_count;$j++) {
-            $mqtt->retain("wifiscanner/".$users[$j]{NAME}, $users[$j]{ONLINE});
+            $mqtt->retain("wifiscanner/".$users[$j]{NAME}, $users[$j]{ONLINE}) or lox_die "Send error: $!";
             LOGINF "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to MQTT broker $mqtt_adress";
             }
-     
+    LOGEND "Operation finished sucessfully.";     
     $mqtt->disconnect(); 
 }    
 
