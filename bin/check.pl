@@ -38,6 +38,8 @@ use Cwd 'abs_path';
 use open qw(:std :utf8);
 use POSIX qw/ strftime /;
 use IO::Socket;
+use Net::MQTT::Simple;
+use LoxBerry::IO;
 
 sub lox_die($);
 
@@ -260,6 +262,32 @@ foreach my $ms (sort keys %miniservers) {
     }
     $sock->close();
 }
+
+##MQTT publish
+
+# Allow unencrypted connection with credentials
+$ENV{MQTT_SIMPLE_ALLOW_INSECURE_LOGIN} = 1;
+
+my $mqttcred = LoxBerry::IO::mqtt_connectiondetails();
+my $mqtt_username = $mqttcred->{brokeruser};
+my $mqtt_password =$mqttcred->{brokerpass};
+
+# Connect to broker
+my $mqtt = Net::MQTT::Simple->new('localhost:1883');
+ 
+# Depending if authentication is required, login to the broker
+if($mqtt_username and $mqtt_password) {
+    $mqtt->login($mqtt_username, $mqtt_password);
+}
+ 
+   for ($j=1;$j<=$users;$j++) {
+    &log;
+    $mqtt->retain("wifiscanner/".${"username" . "$j"}, ${"online" . "$j"}) or die "Send error: $!\n";
+    &log;
+  }
+ 
+ 
+$mqtt->disconnect();
 
 sub lox_die($)
 {
