@@ -40,8 +40,6 @@ use POSIX qw/ strftime /;
 use IO::Socket;
 use Net::MQTT::Simple;
 use LoxBerry::IO;
-use Net::MQTT::Simple;
-use LoxBerry::IO;
 
 sub lox_die($);
 
@@ -72,7 +70,7 @@ GetOptions ('verbose' => \$verbose,
             'quiet'   => sub { $verbose = 0 });
 
 # Starting...
-LOGSTART "Starting $0 Version $version";
+LOGINF "Starting $0 Version $version";
 
 if (! %miniservers) {
     lox_die "No Miniservers configured";
