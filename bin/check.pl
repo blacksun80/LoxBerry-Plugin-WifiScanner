@@ -70,7 +70,7 @@ GetOptions ('verbose' => \$verbose,
             'quiet'   => sub { $verbose = 0 });
 
 # Starting...
-LOGINF "Starting $0 Version $version";
+LOGSTART "Starting $0 Version $version";
 
 if (! %miniservers) {
     lox_die "No Miniservers configured";
