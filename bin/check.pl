@@ -62,6 +62,7 @@ my $fritz_enable    = $pcfg->param("BASE.FRITZBOX_ENABLE");
 my $ip              = $pcfg->param("BASE.FRITZBOX");
 my $port            = $pcfg->param("BASE.FRITZBOX_PORT");
 my $user_count      = $pcfg->param("BASE.USERS");
+my $udp_enable    = $pcfg->param("BASE.UDP_ENABLE");
 
 # Commandline options
 my $verbose = '';
