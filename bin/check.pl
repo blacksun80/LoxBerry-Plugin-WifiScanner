@@ -246,48 +246,52 @@ for ($i=0;$i<$user_count;$i++) {
     }
 }
 
-# Creating UDP socket to every Miniserver
-foreach my $ms (sort keys %miniservers) {
-    # Send value
-    my $sock = IO::Socket::INET->new(
-         Proto    => 'udp',
-         PeerPort => $udpport,
-         PeerAddr => $miniservers{$ms}{IPAddress},
-         Type        => SOCK_DGRAM
-    ) or lox_die "Could not create socket: $!";
+# send Data
 
-    for ($j=0;$j<$user_count;$j++) {
-        $sock->send("$users[$j]{NAME}:$users[$j]{ONLINE}") or lox_die "Send error: $!";
-        LOGINF "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to $miniservers{$ms}{Name} IP: $miniservers{$ms}{IPAddress} Port:$udpport";
+if ($udp_enable) {
+    foreach my $ms (sort keys %miniservers) {
+        # Send value
+        my $sock = IO::Socket::INET->new(
+             Proto    => 'udp',
+             PeerPort => $udpport,
+             PeerAddr => $miniservers{$ms}{IPAddress},
+             Type        => SOCK_DGRAM
+        ) or lox_die "Could not create socket: $!";
+
+        for ($j=0;$j<$user_count;$j++) {
+            $sock->send("$users[$j]{NAME}:$users[$j]{ONLINE}") or lox_die "Send error: $!";
+            LOGINF "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to $miniservers{$ms}{Name} IP: $miniservers{$ms}{IPAddress} Port:$udpport";
+        }
+        $sock->close();
     }
-    $sock->close();
-}
+} else {
+    ##MQTT publish
 
-##MQTT publish
+    # Allow unencrypted connection with credentials
+    $ENV{MQTT_SIMPLE_ALLOW_INSECURE_LOGIN} = 1;
 
-# Allow unencrypted connection with credentials
-$ENV{MQTT_SIMPLE_ALLOW_INSECURE_LOGIN} = 1;
+    my $mqttcred = LoxBerry::IO::mqtt_connectiondetails();
+    my $mqtt_username = $mqttcred->{brokeruser};
+    my $mqtt_password =$mqttcred->{brokerpass};
+    my $mqtt_adress =$mqttcred->{brokeraddress};
+    
 
-my $mqttcred = LoxBerry::IO::mqtt_connectiondetails();
-my $mqtt_username = $mqttcred->{brokeruser};
-my $mqtt_password =$mqttcred->{brokerpass};
+    # Connect to broker
+    my $mqtt = Net::MQTT::Simple->new('localhost:1883');
+     
+    # Depending if authentication is required, login to the broker
+    if($mqtt_username and $mqtt_password) {
+        $mqtt->login($mqtt_username, $mqtt_password);
+    }
+     
+        for ($j=0;$j<$user_count;$j++) {
+            $mqtt->retain("wifiscanner/".$users[$j]{NAME}, $users[$j]{ONLINE});
+            LOGINF "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to MQTT broker $mqtt_adress";
+            }
+     
+    $mqtt->disconnect(); 
+}    
 
-# Connect to broker
-my $mqtt = Net::MQTT::Simple->new('localhost:1883');
- 
-# Depending if authentication is required, login to the broker
-if($mqtt_username and $mqtt_password) {
-    $mqtt->login($mqtt_username, $mqtt_password);
-}
- 
-   for ($j=1;$j<=$users;$j++) {
-    &log;
-    $mqtt->retain("wifiscanner/".${"username" . "$j"}, ${"online" . "$j"}) or die "Send error: $!\n";
-    &log;
-  }
- 
- 
-$mqtt->disconnect();
 
 sub lox_die($)
 {
