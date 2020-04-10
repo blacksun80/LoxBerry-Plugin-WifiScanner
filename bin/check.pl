@@ -40,6 +40,8 @@ use POSIX qw/ strftime /;
 use IO::Socket;
 use Net::MQTT::Simple;
 use LoxBerry::IO;
+use Net::MQTT::Simple;
+use LoxBerry::IO;
 
 sub lox_die($);
 
