@@ -272,23 +272,23 @@ if ($udp_enable) {
     # Allow unencrypted connection with credentials
     $ENV{MQTT_SIMPLE_ALLOW_INSECURE_LOGIN} = 1;
 
-    my $mqttcred = LoxBerry::IO::mqtt_connectiondetails();
+    my $mqttcred = LoxBerry::IO::mqtt_connectiondetails();   
 
-# Connect to broker
-    my $mqtt = Net::MQTT::Simple->new('localhost:1883');
+    # Connect to broker
+    my $mqtt = Net::MQTT::Simple->new($mqttcred->{brokeraddress});
      
     # Depending if authentication is required, login to the broker
     if($mqttcred->{brokeruser} and $mqttcred->{brokerpass}) {
-        $mqtt->login($mqttcred->{brokeruser, $mqttcred->{brokerpass);
+        $mqtt->login($mqttcred->{brokeruser}, $mqttcred->{brokerpass});
     }
      
         for ($j=0;$j<$user_count;$j++) {
             $mqtt->retain("wifiscanner/".$users[$j]{NAME}, $users[$j]{ONLINE}) or lox_die "Send error: $!";
-            LOGOK "Sending Data 'wifiscanner/$users[$j]{NAME}/$users[$j]{ONLINE}' to MQTT broker $mqtt_adress";
+            LOGOK "Sending Data 'wifiscanner/$users[$j]{NAME}/$users[$j]{ONLINE}' to MQTT broker $mqttcred->{brokeraddress}";
             }
-    LOGEND "Operation finished sucessfully.";     
+    LOGEND "Operation finished sucessfully.";
     $mqtt->disconnect(); 
-}    
+}
 
 
 sub lox_die($)
