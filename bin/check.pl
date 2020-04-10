@@ -273,17 +273,13 @@ if ($udp_enable) {
     $ENV{MQTT_SIMPLE_ALLOW_INSECURE_LOGIN} = 1;
 
     my $mqttcred = LoxBerry::IO::mqtt_connectiondetails();
-    my $mqtt_username = $mqttcred->{brokeruser};
-    my $mqtt_password =$mqttcred->{brokerpass};
-    my $mqtt_adress =$mqttcred->{brokeraddress};
-    
 
-    # Connect to broker
+# Connect to broker
     my $mqtt = Net::MQTT::Simple->new('localhost:1883');
      
     # Depending if authentication is required, login to the broker
-    if($mqtt_username and $mqtt_password) {
-        $mqtt->login($mqtt_username, $mqtt_password);
+    if($mqttcred->{brokeruser} and $mqttcred->{brokerpass}) {
+        $mqtt->login($mqttcred->{brokeruser, $mqttcred->{brokerpass);
     }
      
         for ($j=0;$j<$user_count;$j++) {
