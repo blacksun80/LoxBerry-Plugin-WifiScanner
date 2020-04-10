@@ -288,7 +288,7 @@ if ($udp_enable) {
      
         for ($j=0;$j<$user_count;$j++) {
             $mqtt->retain("wifiscanner/".$users[$j]{NAME}, $users[$j]{ONLINE}) or lox_die "Send error: $!";
-            LOGINF "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to MQTT broker $mqtt_adress";
+            LOGINF "Sending Data 'wifiscanner/$users[$j]{NAME}/$users[$j]{ONLINE}' to MQTT broker $mqtt_adress";
             }
     LOGEND "Operation finished sucessfully.";     
     $mqtt->disconnect(); 
