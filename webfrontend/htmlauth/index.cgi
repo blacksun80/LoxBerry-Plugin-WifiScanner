@@ -160,11 +160,20 @@ $template->param( FRITZ_ENABLE => $fritz_enable );
 
 
 # UDP Enabled
-@values = ('0', '1' );
-%labels = (
-      '0' => "mqtt",
-      '1' => "UDP",
-  );
+my $loxberryversion = LoxBerry::System::lbversion();
+
+if($loxberryversion == 2) {
+    @values = ('0', '1' );
+    %labels = (
+          '0' => "mqtt",
+          '1' => "UDP",
+      );
+} else {
+    @values = ('1');
+    %labels = (
+          '1' => "UDP",
+      );
+}
 my $udp_enable = $cgi->popup_menu(
       -name    => 'udp_enable',
       -id      => 'udp_enable',
