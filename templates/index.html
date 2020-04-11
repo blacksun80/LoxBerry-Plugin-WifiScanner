@@ -132,6 +132,17 @@
                             </tr>
                             <tr>
                                     <td width="25%">
+                                        <label id="labelapikey"><TMPL_VAR SETTINGS.UDP_ENABLE></label>
+                                    </td>
+                                    <td colspan="2" width="50%">
+                                        <fieldset>
+                                        <TMPL_VAR UDP_ENABLE>
+                                        </fieldset>
+                                    </td>
+                                    <td width="25%">
+                                    </td>
+                            </tr>
+                                    <td width="25%">
                                         <label id="labelsendudp"><TMPL_VAR SETTINGS.SEND_UDP></label>
                                     </td>
                                     <td width="50%">
@@ -159,6 +170,7 @@
 // Add some attributes PERL::CGI doesn't provide
 $('#enable').attr('data-role','flipswitch');
 $('#fritz_enable').attr('data-role','flipswitch');
+$('#udp_enable').attr('data-role','flipswitch');
 // Form Validation
 $( document ).ready(function()
 {

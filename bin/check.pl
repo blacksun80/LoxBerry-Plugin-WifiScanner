@@ -38,6 +38,8 @@ use Cwd 'abs_path';
 use open qw(:std :utf8);
 use POSIX qw/ strftime /;
 use IO::Socket;
+use Net::MQTT::Simple;
+use LoxBerry::IO;
 
 sub lox_die($);
 
@@ -58,6 +60,7 @@ my $fritz_enable    = $pcfg->param("BASE.FRITZBOX_ENABLE");
 my $ip              = $pcfg->param("BASE.FRITZBOX");
 my $port            = $pcfg->param("BASE.FRITZBOX_PORT");
 my $user_count      = $pcfg->param("BASE.USERS");
+my $udp_enable      = $pcfg->param("BASE.UDP_ENABLE");
 
 # Commandline options
 my $verbose = '';
@@ -244,22 +247,49 @@ for ($i=0;$i<$user_count;$i++) {
     }
 }
 
-# Creating UDP socket to every Miniserver
-foreach my $ms (sort keys %miniservers) {
-    # Send value
-    my $sock = IO::Socket::INET->new(
-         Proto    => 'udp',
-         PeerPort => $udpport,
-         PeerAddr => $miniservers{$ms}{IPAddress},
-         Type        => SOCK_DGRAM
-    ) or lox_die "Could not create socket: $!";
+# send Data
 
-    for ($j=0;$j<$user_count;$j++) {
-        $sock->send("$users[$j]{NAME}:$users[$j]{ONLINE}") or lox_die "Send error: $!";
-        LOGINF "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to $miniservers{$ms}{Name} IP: $miniservers{$ms}{IPAddress} Port:$udpport";
+if ($udp_enable) {
+    foreach my $ms (sort keys %miniservers) {
+        # Send value
+        my $sock = IO::Socket::INET->new(
+             Proto    => 'udp',
+             PeerPort => $udpport,
+             PeerAddr => $miniservers{$ms}{IPAddress},
+             Type        => SOCK_DGRAM
+        ) or lox_die "Could not create socket: $!";
+
+        for ($j=0;$j<$user_count;$j++) {
+            $sock->send("$users[$j]{NAME}:$users[$j]{ONLINE}") or lox_die "Send error: $!";
+            LOGOK "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to $miniservers{$ms}{Name} IP: $miniservers{$ms}{IPAddress} Port:$udpport";
+        }
+        LOGEND "Operation finished sucessfully.";
+        $sock->close();
     }
-    $sock->close();
+} else {
+    ##MQTT publish
+
+    # Allow unencrypted connection with credentials
+    $ENV{MQTT_SIMPLE_ALLOW_INSECURE_LOGIN} = 1;
+
+    my $mqttcred = LoxBerry::IO::mqtt_connectiondetails();   
+
+    # Connect to broker
+    my $mqtt = Net::MQTT::Simple->new($mqttcred->{brokeraddress});
+     
+    # Depending if authentication is required, login to the broker
+    if($mqttcred->{brokeruser} and $mqttcred->{brokerpass}) {
+        $mqtt->login($mqttcred->{brokeruser}, $mqttcred->{brokerpass});
+    }
+     
+        for ($j=0;$j<$user_count;$j++) {
+            $mqtt->retain("wifiscanner/".$users[$j]{NAME}, $users[$j]{ONLINE}) or lox_die "Send error: $!";
+            LOGOK "Sending Data 'wifiscanner/$users[$j]{NAME}/$users[$j]{ONLINE}' to MQTT broker $mqttcred->{brokeraddress}";
+            }
+    LOGEND "Operation finished sucessfully.";
+    $mqtt->disconnect(); 
 }
+
 
 sub lox_die($)
 {
