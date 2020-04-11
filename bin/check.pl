@@ -215,7 +215,7 @@ for ($i=0;$i<$user_count;$i++) {
     foreach my $ip (@ips) {
         LOGINF "Ping $ip";
         # This sends really a lot of request, but it makes sure we get an answer as fast as possible
-        if (system("sudo /usr/sbin/arping -w 200 -C1 -c5000 $ip $log_cmd") == 0) {
+        if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
             LOGINF "Host $ip is online";
             $users[$i]{ONLINE} = 1;
             $found = 1;
@@ -234,7 +234,7 @@ for ($i=0;$i<$user_count;$i++) {
     foreach my $mac (@macs) {
         LOGINF "Ping $mac";
         # This sends really a lot of request, but it makes sure we get an answer as fast as possible
-        if (system("sudo /usr/sbin/arping -w 200 -C1 -c5000 $mac $log_cmd") == 0) {
+        if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $mac $log_cmd") == 0) {
             LOGINF "Mac $mac is online";
             $users[$i]{ONLINE} = 1;
             last;
