@@ -256,6 +256,7 @@ for ($i=0;$i<$user_count;$i++) {
     }
 }
 # send Data
+sendFoundUsers();
 LOGEND "Operation finished sucessfully.";
 
 
