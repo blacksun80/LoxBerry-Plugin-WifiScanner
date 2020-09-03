@@ -170,7 +170,13 @@ EOD
 
             my $init_url = "https://$ip:$port$control_url";
             my $resp_init = $ua->post($init_url, Content_Type => 'text/xml; charset=utf-8', Content => $init_request);
-            my $xml_mac_resp = XMLin($resp_init->decoded_content);
+            my $response = $resp_init->decoded_content;
+            my $xml_mac_resp = XMLin($response);
+
+            $response =~ s/&/&amp;/ig;
+            $response =~ s/</&lt;/ig;
+
+            LOGDEB "FritzBox Response:\n$response";
 
             if(exists $xml_mac_resp->{'s:Body'}->{'s:Fault'}) {
                 if($xml_mac_resp->{'s:Body'}->{'s:Fault'}->{detail}->{UPnPError}->{errorCode} eq "714") {
@@ -273,8 +279,8 @@ sub sendFoundUsers()
             ) or lox_die "Could not create socket: $!";
 
             for ($j=0;$j<$user_count;$j++) {
-                $sock->send("$users[$j]{NAME}:$users[$j]{ONLINE}") or lox_die "Send error: $!";
                 LOGOK "Sending Data '$users[$j]{NAME}:$users[$j]{ONLINE}' to $miniservers{$ms}{Name} IP: $miniservers{$ms}{IPAddress} Port:$udpport";
+                $sock->send("$users[$j]{NAME}:$users[$j]{ONLINE}") or lox_die "Send error: $!";
             }
             $sock->close();
         }
@@ -295,8 +301,8 @@ sub sendFoundUsers()
         }
 
             for ($j=0;$j<$user_count;$j++) {
-                $mqtt->retain("wifiscanner/".$users[$j]{NAME}, $users[$j]{ONLINE}) or lox_die "Send error: $!";
                 LOGOK "Sending Data 'wifiscanner/$users[$j]{NAME}/$users[$j]{ONLINE}' to MQTT broker $mqttcred->{brokeraddress}";
+                $mqtt->retain("wifiscanner/".$users[$j]{NAME}, $users[$j]{ONLINE}) or lox_die "Send error: $!";
                 }
         $mqtt->disconnect();
     }
