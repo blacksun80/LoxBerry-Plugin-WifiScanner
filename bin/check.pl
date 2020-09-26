@@ -344,7 +344,7 @@ sub ping($)
     LOGINF "Ping $ip";
     if ($ping_cmd == 0) {
         # This sends really a lot of request, but it makes sure we get an answer as fast as possible
-        if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
+        if (system("sudo /usr/sbin/arping -W 0.2 -c 20 -C1 $ip $log_cmd") == 0) {
             LOGINF "Host $ip is online";
             return 1;
         }
