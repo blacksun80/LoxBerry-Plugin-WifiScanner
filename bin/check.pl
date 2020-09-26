@@ -186,19 +186,20 @@ EOD
             }
             if(exists $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'})
             {
-                if($xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewActive} eq "1") {
-                    my $name = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewHostName};
-                    my $ip = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewIPAddress};
-                    my $iftype =  $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewInterfaceType};
+                my $active = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewActive};
+                my $name = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewHostName};
+                my $ip = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewIPAddress};
+                my $iftype =  $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewInterfaceType};
+                if ($active eq "1") {
                     LOGINF "Mac $mac ($name) is online with IP $ip on $iftype";
                     $users[$i]{ONLINE} = 1;
                     $user_online = 1;
-                }
-                if($xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewActive} eq "0") {
-                    my $name = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewHostName};
-                    my $ip = $xml_mac_resp->{'s:Body'}->{'u:GetSpecificHostEntryResponse'}->{NewIPAddress};
+                } else {
                     LOGINF "Mac $mac ($name) is offline";
                 }
+                my @ips = @{$user{IPS}};
+                push(@ips, $ip);
+                $users[$i]{IPS} = \@ips;
             }
         }
     }
