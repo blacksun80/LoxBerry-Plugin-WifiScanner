@@ -226,7 +226,7 @@ if ($active_scan) {
         my @macs = @{$user{MACS}};
         my @ips = @{$user{IPS}};
 
-        $log_cmd = "";
+        $log_cmd = ">> /dev/null 2>&1";
         if ($log->loglevel() >= 7) {
             my $logfile = $log->filename();
            $log_cmd = ">> $logfile 2>&1";
