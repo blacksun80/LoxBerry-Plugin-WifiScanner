@@ -124,6 +124,26 @@
                             </tr>
                             <tr>
                                     <td colspan=3 width="75%" valign="middle">
+                                    <h2><TMPL_VAR SETTINGS.SCAN></h2>
+                                    </td>
+                                    <td align="right">
+                                    &nbsp;
+                                    </td>
+                            </tr>
+                            <tr>
+                                    <td width="25%">
+                                        <label id="labelapikey"><TMPL_VAR SETTINGS.ACTIVE_SCAN></label>
+                                    </td>
+                                    <td colspan="2" width="50%">
+                                        <fieldset>
+                                        <TMPL_VAR ACTIVE_SCAN>
+                                        </fieldset>
+                                    </td>
+                                    <td width="25%">
+                                    </td>
+                            </tr>
+                            <tr>
+                                    <td colspan=3 width="75%" valign="middle">
                                     <h2><TMPL_VAR SETTINGS.MINISERVER></h2>
                                     </td>
                                     <td align="right">
@@ -170,6 +190,7 @@
 // Add some attributes PERL::CGI doesn't provide
 $('#enable').attr('data-role','flipswitch');
 $('#fritz_enable').attr('data-role','flipswitch');
+$('#active_scan').attr('data-role','flipswitch');
 $('#udp_enable').attr('data-role','flipswitch');
 // Form Validation
 $( document ).ready(function()

@@ -61,6 +61,7 @@ my $udpport         = $pcfg->param("BASE.PORT");
 my $fritz_enable    = $pcfg->param("BASE.FRITZBOX_ENABLE");
 my $ip              = $pcfg->param("BASE.FRITZBOX");
 my $port            = $pcfg->param("BASE.FRITZBOX_PORT");
+my $active_scan     = $pcfg->param("BASE.ACTIVE_SCAN");
 my $user_count      = $pcfg->param("BASE.USERS");
 my $udp_enable      = $pcfg->param("BASE.UDP_ENABLE");
 
@@ -212,72 +213,74 @@ if ($user_online) {
     sendFoundUsers()
 }
 
-LOGDEB "Iterating over all users to do actives scans where needed";
-for ($i=0;$i<$user_count;$i++) {
-    my %user = %{$users[$i]};
-    if ($user{ONLINE}) {
-        LOGDEB "Skipping $user{NAME}, because we already have a result";
-        next;
-    }
-
-    LOGINF "Pinging Devices for user: $user{NAME}";
-    my @macs = @{$user{MACS}};
-    my @ips = @{$user{IPS}};
-
-    $log_cmd = "";
-    if ($log->loglevel() >= 7) {
-        my $logfile = $log->filename();
-       $log_cmd = ">> $logfile 2>&1";
-    }
-
-    $found = 0;
-    # Check with ip addresses
-    foreach my $ip (@ips) {
-        LOGINF "Ping $ip";
-        # This sends really a lot of request, but it makes sure we get an answer as fast as possible
-        if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
-            LOGINF "Host $ip is online";
-            $users[$i]{ONLINE} = 1;
-            $found = 1;
-            last;
-        } else {
-            LOGINF "Host $ip is offline";
+if ($active_scan) {
+    LOGDEB "Iterating over all users to do actives scans where needed";
+    for ($i=0;$i<$user_count;$i++) {
+        my %user = %{$users[$i]};
+        if ($user{ONLINE}) {
+            LOGDEB "Skipping $user{NAME}, because we already have a result";
+            next;
         }
-    }
 
-    # If one of the device was found by pinging the IP addresses no need to check the mac addresses
-    if ($found) {
-        next;
-    }
+        LOGINF "Pinging Devices for user: $user{NAME}";
+        my @macs = @{$user{MACS}};
+        my @ips = @{$user{IPS}};
 
-    # Check with mac addresses
-    foreach my $mac (@macs) {
-        LOGINF "Trying to get ip address for $mac";
-        my $ip = mac2ip($mac);
-        if (not $ip eq "") {
-            if ($ip ~~ @ips) {
-                LOGINF "Skipping $mac ($ip) as it was already scanned";
-                next;
+        $log_cmd = "";
+        if ($log->loglevel() >= 7) {
+            my $logfile = $log->filename();
+           $log_cmd = ">> $logfile 2>&1";
+        }
+
+        $found = 0;
+        # Check with ip addresses
+        foreach my $ip (@ips) {
+            LOGINF "Ping $ip";
+            # This sends really a lot of request, but it makes sure we get an answer as fast as possible
+            if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
+                LOGINF "Host $ip is online";
+                $users[$i]{ONLINE} = 1;
+                $found = 1;
+                last;
+            } else {
+                LOGINF "Host $ip is offline";
             }
-            push(@ips, $ip);
-        } else {
-            # If we couldn't determine an ip address try to scan the mac address instead
-            $ip = $mac;
         }
 
-        LOGINF "Ping $ip";
-        # This sends really a lot of request, but it makes sure we get an answer as fast as possible
-        if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
-            LOGINF "Host $ip is online";
-            $users[$i]{ONLINE} = 1;
-            last;
-        } else {
-            LOGINF "Host $ip is offline";
+        # If one of the device was found by pinging the IP addresses no need to check the mac addresses
+        if ($found) {
+            next;
+        }
+
+        # Check with mac addresses
+        foreach my $mac (@macs) {
+            LOGINF "Trying to get ip address for $mac";
+            my $ip = mac2ip($mac);
+            if (not $ip eq "") {
+                if ($ip ~~ @ips) {
+                    LOGINF "Skipping $mac ($ip) as it was already scanned";
+                    next;
+                }
+                push(@ips, $ip);
+            } else {
+                # If we couldn't determine an ip address try to scan the mac address instead
+                $ip = $mac;
+            }
+
+            LOGINF "Ping $ip";
+            # This sends really a lot of request, but it makes sure we get an answer as fast as possible
+            if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
+                LOGINF "Host $ip is online";
+                $users[$i]{ONLINE} = 1;
+                last;
+            } else {
+                LOGINF "Host $ip is offline";
+            }
         }
     }
+    # send Data
+    sendFoundUsers();
 }
-# send Data
-sendFoundUsers();
 LOGEND "Operation finished sucessfully.";
 
 

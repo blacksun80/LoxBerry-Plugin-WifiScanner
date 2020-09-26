@@ -53,6 +53,7 @@ if ($R::saveformdata) {
     $cfg->param("BASE.PORT", "$R::udpport");
     $cfg->param("BASE.FRITZBOX_ENABLE", "$R::fritz_enable");
     $cfg->param("BASE.UDP_ENABLE", "$R::udp_enable");
+    $cfg->param("BASE.ACTIVE_SCAN", "$R::active_scan");
     $cfg->param("BASE.FRITZBOX", "$R::fritzbox");
     $cfg->param("BASE.FRITZBOX_PORT", "$R::fritzbox_port");
     $cfg->param("BASE.USERS", "$R::user_count");
@@ -157,6 +158,16 @@ my $fritz_enable = $cgi->popup_menu(
       -default => $cfg->param('BASE.FRITZBOX_ENABLE'),
   );
 $template->param( FRITZ_ENABLE => $fritz_enable );
+
+# Active scan Enabled
+my $active_scan = $cgi->popup_menu(
+      -name    => 'active_scan',
+      -id      => 'active_scan',
+      -values  => \@values,
+      -labels  => \%labels,
+      -default => $cfg->param('BASE.ACTIVE_SCAN'),
+  );
+$template->param( ACTIVE_SCAN => $active_scan );
 
 
 # UDP Enabled
