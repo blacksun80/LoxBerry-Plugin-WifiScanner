@@ -54,6 +54,7 @@ if ($R::saveformdata) {
     $cfg->param("BASE.FRITZBOX_ENABLE", "$R::fritz_enable");
     $cfg->param("BASE.UDP_ENABLE", "$R::udp_enable");
     $cfg->param("BASE.ACTIVE_SCAN", "$R::active_scan");
+    $cfg->param("BASE.PING_CMD", "$R::ping_cmd");
     $cfg->param("BASE.FRITZBOX", "$R::fritzbox");
     $cfg->param("BASE.FRITZBOX_PORT", "$R::fritzbox_port");
     $cfg->param("BASE.USERS", "$R::user_count");
@@ -168,6 +169,22 @@ my $active_scan = $cgi->popup_menu(
       -default => $cfg->param('BASE.ACTIVE_SCAN'),
   );
 $template->param( ACTIVE_SCAN => $active_scan );
+
+# ping cmd
+@values = ('0', '1' );
+%labels = (
+      '0' => "arping",
+      '1' => "ping",
+  );
+
+my $ping_cmd = $cgi->popup_menu(
+      -name    => 'ping_cmd',
+      -id      => 'ping_cmd',
+      -values  => \@values,
+      -labels  => \%labels,
+      -default => $cfg->param('BASE.PING_CMD'),
+  );
+$template->param( PING_CMD => $ping_cmd );
 
 
 # UDP Enabled

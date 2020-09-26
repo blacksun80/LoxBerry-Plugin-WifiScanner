@@ -43,6 +43,7 @@ use LoxBerry::IO;
 
 sub sendFoundUsers();
 sub mac2ip($);
+sub ping($);
 sub lox_die($);
 
 ##########################################################################
@@ -62,6 +63,7 @@ my $fritz_enable    = $pcfg->param("BASE.FRITZBOX_ENABLE");
 my $ip              = $pcfg->param("BASE.FRITZBOX");
 my $port            = $pcfg->param("BASE.FRITZBOX_PORT");
 my $active_scan     = $pcfg->param("BASE.ACTIVE_SCAN");
+my $ping_cmd        = $pcfg->param("BASE.PING_CMD");
 my $user_count      = $pcfg->param("BASE.USERS");
 my $udp_enable      = $pcfg->param("BASE.UDP_ENABLE");
 
@@ -235,15 +237,10 @@ if ($active_scan) {
         $found = 0;
         # Check with ip addresses
         foreach my $ip (@ips) {
-            LOGINF "Ping $ip";
-            # This sends really a lot of request, but it makes sure we get an answer as fast as possible
-            if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
-                LOGINF "Host $ip is online";
-                $users[$i]{ONLINE} = 1;
+            if (ping($ip)) {
                 $found = 1;
+                $users[$i]{ONLINE} = 1;
                 last;
-            } else {
-                LOGINF "Host $ip is offline";
             }
         }
 
@@ -267,14 +264,9 @@ if ($active_scan) {
                 $ip = $mac;
             }
 
-            LOGINF "Ping $ip";
-            # This sends really a lot of request, but it makes sure we get an answer as fast as possible
-            if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
-                LOGINF "Host $ip is online";
+            if (ping($ip)) {
                 $users[$i]{ONLINE} = 1;
                 last;
-            } else {
-                LOGINF "Host $ip is offline";
             }
         }
     }
@@ -344,6 +336,29 @@ sub mac2ip($)
     }
 
     return $ip;
+}
+
+sub ping($)
+{
+    my $ip = $_[0];
+    LOGINF "Ping $ip";
+    if ($ping_cmd == 0) {
+        # This sends really a lot of request, but it makes sure we get an answer as fast as possible
+        if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
+            LOGINF "Host $ip is online";
+            return 1;
+        }
+    } elsif ($ping_cmd == 1) {
+        if (system("/bin/ping -i 0.2 -c 3 $ip $log_cmd") == 0) {
+            LOGINF "Host $ip is online";
+            return 1;
+        }
+    } else {
+        LOGERR "Invalid ping cmd configuration";
+    }
+
+    LOGINF "Host $ip is offline";
+    return 0;
 }
 
 sub lox_die($)
