@@ -6,3 +6,4 @@ libxml-simple-perl
 libio-all-lwp-perl
 libgetopt-long-descriptive-perl
 arping
+arp-scan

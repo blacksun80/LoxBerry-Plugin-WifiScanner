@@ -42,6 +42,7 @@ use Net::MQTT::Simple;
 use LoxBerry::IO;
 
 sub sendFoundUsers();
+sub mac2ip($);
 sub lox_die($);
 
 ##########################################################################
@@ -250,14 +251,27 @@ for ($i=0;$i<$user_count;$i++) {
 
     # Check with mac addresses
     foreach my $mac (@macs) {
-        LOGINF "Ping $mac";
+        LOGINF "Trying to get ip address for $mac";
+        my $ip = mac2ip($mac);
+        if (not $ip eq "") {
+            if ($ip ~~ @ips) {
+                LOGINF "Skipping $mac ($ip) as it was already scanned";
+                next;
+            }
+            push(@ips, $ip);
+        } else {
+            # If we couldn't determine an ip address try to scan the mac address instead
+            $ip = $mac;
+        }
+
+        LOGINF "Ping $ip";
         # This sends really a lot of request, but it makes sure we get an answer as fast as possible
-        if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $mac $log_cmd") == 0) {
-            LOGINF "Mac $mac is online";
+        if (system("sudo /usr/sbin/arping -W 0.0002 -C1 -c5000 $ip $log_cmd") == 0) {
+            LOGINF "Host $ip is online";
             $users[$i]{ONLINE} = 1;
             last;
         } else {
-            LOGINF "Mac $mac is offline";
+            LOGINF "Host $ip is offline";
         }
     }
 }
@@ -308,6 +322,25 @@ sub sendFoundUsers()
     }
 }
 
+sub mac2ip($)
+{
+    my $mac = $_[0];
+    my $ip = `/usr/sbin/arp -a | grep $mac | grep -oP '\\(\\K[^)]*'`;
+    chomp($ip);
+    if ($ip eq "") {
+        LOGINF "Couldn't find mac in arp table. Doing active scan";
+        $ip = `sudo /usr/bin/arp-scan --destaddr=$mac --localnet -N --ignoredups | grep $mac | cut -f 1`;
+        chomp($ip);
+        if (not $ip eq "") {
+            LOGINF "Found $ip, adding the mac to arp table";
+            system("sudo /usr/sbin/arp -s $ip $mac");
+        }
+    } else {
+        LOGDEB "Found $ip";
+    }
+
+    return $ip;
+}
 
 sub lox_die($)
 {
