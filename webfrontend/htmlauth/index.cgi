@@ -188,9 +188,16 @@ $template->param( PING_CMD => $ping_cmd );
 
 
 # UDP Enabled
-my $loxberryversion = LoxBerry::System::lbversion();
+my $mqtt_available = 0;
+eval {
+    require LoxBerry::IO;
+    my $mqttcred = LoxBerry::IO::mqtt_connectiondetails();
+    if ( $mqttcred ) {
+        $mqtt_available = 1;
+    }
+};
 
-if($loxberryversion == 2) {
+if($mqtt_available) {
     @values = ('0', '1' );
     %labels = (
           '0' => "mqtt",
