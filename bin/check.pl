@@ -325,7 +325,7 @@ sub mac2ip($)
     chomp($ip);
     if ($ip eq "") {
         LOGINF "Couldn't find mac in arp table. Doing active scan";
-        $ip = `sudo /usr/bin/arp-scan --destaddr=$mac --localnet -N --ignoredups | grep $mac | cut -f 1`;
+        $ip = `sudo /usr/sbin/arp-scan --destaddr=$mac --localnet -N --ignoredups | grep $mac | cut -f 1`;
         chomp($ip);
         if (not $ip eq "") {
             LOGINF "Found $ip, adding the mac to arp table";

@@ -1,4 +1,4 @@
 # Sudoers file for the plugin. Note: All scripts in sbin will be added automatically
 %loxberry ALL = NOPASSWD: /usr/sbin/arping
 %loxberry ALL = NOPASSWD: /usr/sbin/arp
-%loxberry ALL = NOPASSWD: /usr/bin/arp-scan
+%loxberry ALL = NOPASSWD: /usr/sbin/arp-scan
