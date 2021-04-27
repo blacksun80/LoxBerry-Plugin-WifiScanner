@@ -210,7 +210,7 @@ EOD
     LOGINF "Ping devices without asking the Router first";
 }
 
-if ($user_online) {
+if ($user_online || !$active_scan) {
     LOGDEB "Send infos about the online users";
     sendFoundUsers()
 }
