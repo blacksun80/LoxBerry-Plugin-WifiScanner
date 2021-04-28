@@ -40,6 +40,8 @@ use POSIX qw/ strftime /;
 use IO::Socket;
 use Net::MQTT::Simple;
 use LoxBerry::IO;
+use Data::Validate::IP;
+use Capture::Tiny qw/capture/;
 
 sub sendFoundUsers();
 sub mac2ip($);
@@ -325,11 +327,16 @@ sub mac2ip($)
     chomp($ip);
     if ($ip eq "") {
         LOGINF "Couldn't find mac in arp table. Doing active scan";
-        $ip = `sudo /usr/sbin/arp-scan --destaddr=$mac --localnet -N --ignoredups | grep $mac | cut -f 1`;
+        my ($ip, $stderr) = capture {
+          system ( "sudo /usr/sbin/arp-scan --destaddr=$mac --localnet -N --ignoredups | grep $mac | cut -f 1" );
+        };
         chomp($ip);
-        if (not $ip eq "") {
+        my $validator=Data::Validate::IP->new;
+        if($validator->is_ipv4($ip)) {
             LOGINF "Found $ip, adding the mac to arp table";
             system("sudo /usr/sbin/arp -s $ip $mac");
+        } else {
+            LOGINF "Couldn't determine the mac address error: $stderr";
         }
     } else {
         LOGDEB "Found $ip";
