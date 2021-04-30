@@ -323,15 +323,15 @@ sub sendFoundUsers()
 sub mac2ip($)
 {
     my $mac = $_[0];
-    my $ip = `/usr/sbin/arp -a | grep $mac | grep -oP '\\(\\K[^)]*'`;
+    my $validator=Data::Validate::IP->new;
+    my $ip = `/usr/sbin/arp -e -n | grep $mac | cut -f 1 -d ' '`;
     chomp($ip);
-    if ($ip eq "") {
+    if (!$validator->is_ipv4($ip)) {
         LOGINF "Couldn't find mac in arp table. Doing active scan";
         my ($ip, $stderr) = capture {
           system ( "sudo /usr/sbin/arp-scan --destaddr=$mac --localnet -N --ignoredups | grep $mac | cut -f 1" );
         };
         chomp($ip);
-        my $validator=Data::Validate::IP->new;
         if($validator->is_ipv4($ip)) {
             LOGINF "Found $ip, adding the mac to arp table";
             system("sudo /usr/sbin/arp -s $ip $mac");
