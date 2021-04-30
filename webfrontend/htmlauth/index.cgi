@@ -54,6 +54,7 @@ if ($R::saveformdata) {
     $cfg->param("BASE.FRITZBOX_ENABLE", "$R::fritz_enable");
     $cfg->param("BASE.UDP_ENABLE", "$R::udp_enable");
     $cfg->param("BASE.ACTIVE_SCAN", "$R::active_scan");
+    $cfg->param("BASE.USE_CACHE", "$R::use_cache");
     $cfg->param("BASE.PING_CMD", "$R::ping_cmd");
     $cfg->param("BASE.FRITZBOX", "$R::fritzbox");
     $cfg->param("BASE.FRITZBOX_PORT", "$R::fritzbox_port");
@@ -108,6 +109,11 @@ if ($R::saveformdata) {
     }
 
     exit;
+}
+
+%settings = $cfg->vars;
+if (!exists($settings{"BASE.USE_CACHE"})) {
+    $cfg->param("BASE.USE_CACHE", "1");
 }
 
 # Enabled
@@ -169,6 +175,16 @@ my $active_scan = $cgi->popup_menu(
       -default => $cfg->param('BASE.ACTIVE_SCAN'),
   );
 $template->param( ACTIVE_SCAN => $active_scan );
+
+# Active scan Enabled
+my $use_cache = $cgi->popup_menu(
+      -name    => 'use_cache',
+      -id      => 'use_cache',
+      -values  => \@values,
+      -labels  => \%labels,
+      -default => $cfg->param('BASE.USE_CACHE'),
+  );
+$template->param( USE_CACHE => $use_cache );
 
 # ping cmd
 @values = ('0', '1' );

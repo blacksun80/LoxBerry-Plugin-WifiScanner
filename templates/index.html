@@ -144,6 +144,18 @@
                             </tr>
                             <tr>
                                     <td width="25%">
+                                        <label id="labelapikey"><TMPL_VAR SETTINGS.USE_CACHE></label>
+                                    </td>
+                                    <td colspan="2" width="50%">
+                                        <fieldset>
+                                        <TMPL_VAR USE_CACHE>
+                                        </fieldset>
+                                    </td>
+                                    <td width="25%">
+                                    </td>
+                            </tr>
+                            <tr>
+                                    <td width="25%">
                                         <label id="labelapikey"><TMPL_VAR SETTINGS.PING_CMD></label>
                                     </td>
                                     <td colspan="2" width="50%">
@@ -203,6 +215,7 @@
 $('#enable').attr('data-role','flipswitch');
 $('#fritz_enable').attr('data-role','flipswitch');
 $('#active_scan').attr('data-role','flipswitch');
+$('#use_cache').attr('data-role','flipswitch');
 $('#udp_enable').attr('data-role','flipswitch');
 // Form Validation
 $( document ).ready(function()

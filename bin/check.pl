@@ -66,8 +66,10 @@ my $ip              = $pcfg->param("BASE.FRITZBOX");
 my $port            = $pcfg->param("BASE.FRITZBOX_PORT");
 my $active_scan     = $pcfg->param("BASE.ACTIVE_SCAN");
 my $ping_cmd        = $pcfg->param("BASE.PING_CMD");
+my $use_cache       = $pcfg->param("BASE.USE_CACHE");
 my $user_count      = $pcfg->param("BASE.USERS");
 my $udp_enable      = $pcfg->param("BASE.UDP_ENABLE");
+
 
 # Commandline options
 my $verbose = '';
@@ -326,14 +328,18 @@ sub mac2ip($)
     my $validator=Data::Validate::IP->new;
     my $ip = `/usr/sbin/arp -e -n | grep $mac | cut -f 1 -d ' '`;
     chomp($ip);
-    if (!$validator->is_ipv4($ip)) {
-        LOGINF "Couldn't find mac in arp table. Doing active scan";
+    if (!$validator->is_ipv4($ip) || !$use_cache) {
+        if ($use_cache) {
+            LOGINF "Couldn't find mac in arp table (cache). Doing active scan";
+        } else {
+            LOGINF "Skipping to check arp table (cache). Doing active scan";
+        }
         my ($ip, $stderr) = capture {
           system ( "sudo /usr/sbin/arp-scan --destaddr=$mac --localnet -N --ignoredups | grep $mac | cut -f 1" );
         };
         chomp($ip);
         if($validator->is_ipv4($ip)) {
-            LOGINF "Found $ip, adding the mac to arp table";
+            LOGINF "Found $ip, adding the mac to arp table (cache)";
             system("sudo /usr/sbin/arp -s $ip $mac");
         } else {
             LOGINF "Couldn't determine the mac address error: $stderr";
