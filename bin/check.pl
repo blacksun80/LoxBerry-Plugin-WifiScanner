@@ -100,7 +100,8 @@ for ($i=1;$i<=$user_count;$i++) {
     foreach my $in (@input_splitted) {
         if ($in =~ /^([A-fa-f0-9]{2}:){5}([A-fa-f0-9]{2})$/) {
             LOGDEB "Identified $in as MAC ADDRESS";
-            push(@macs, $in);
+            $mac = lc $in;
+            push(@macs, $mac);
         } else {
             LOGDEB "Identified $in as IP ADDRESS";
             push(@ips, $in);
