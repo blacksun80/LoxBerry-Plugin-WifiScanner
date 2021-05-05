@@ -327,21 +327,29 @@ sub mac2ip($)
 {
     my $mac = $_[0];
     my $validator=Data::Validate::IP->new;
-    my $ip = `/usr/sbin/arp -e -n | grep $mac | cut -f 1 -d ' '`;
-    chomp($ip);
-    if (!$validator->is_ipv4($ip) || !$use_cache) {
+    my $ip = "";
+    if ($use_cache) {
+        $ip = `/usr/sbin/arp -e -n | grep $mac | cut -f 1 -d ' '`;
+        chomp($ip);
+    }
+    if (!$validator->is_ipv4($ip)) {
         if ($use_cache) {
             LOGINF "Couldn't find mac in arp table (cache). Doing active scan";
         } else {
             LOGINF "Skipping to check arp table (cache). Doing active scan";
         }
-        my ($ip, $stderr) = capture {
+        my $stderr;
+        ($ip, $stderr) = capture {
           system ( "sudo /usr/sbin/arp-scan --destaddr=$mac --localnet -N --ignoredups | grep $mac | cut -f 1" );
         };
         chomp($ip);
         if($validator->is_ipv4($ip)) {
-            LOGINF "Found $ip, adding the mac to arp table (cache)";
-            system("sudo /usr/sbin/arp -s $ip $mac");
+            if ($use_cache) {
+                LOGINF "Found $ip, adding the mac to arp table (cache)";
+                system("sudo /usr/sbin/arp -s $ip $mac");
+            } else {
+                LOGDEB "Found $ip";
+            }
         } else {
             LOGINF "Couldn't determine the mac address error: $stderr";
         }
