@@ -92,6 +92,8 @@ for ($i=1;$i<=$user_count;$i++) {
     $user{NAME} = $pcfg->param("USER$i.NAME");
     LOGDEB "Found config for $user{NAME}";
     my $input = $pcfg->param("USER$i.MACS");
+    # Entferne alle Zeichen außer 0-9, a-z, A-Z, ., -, ; und : aus dem String
+    $input =~ s/[^0-9a-zA-Z\.\-;:]//g;
     my @input_splitted = split /;/, $input;
 
     my @ips = ();
